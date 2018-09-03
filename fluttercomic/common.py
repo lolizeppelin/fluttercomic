@@ -1,0 +1,10 @@
+NAME = 'fluttercomic'
+
+MAXBOOKS = 50
+
+PROPORTION = 12
+
+ACTIVE = 0
+HIDE = 1
+
+ONECHAPTER = 10
