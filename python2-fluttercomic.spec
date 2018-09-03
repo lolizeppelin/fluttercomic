@@ -59,15 +59,13 @@ install -p -D -m 0754 bin/* %{buildroot}%{_bindir}
 %{python_sitelib}/%{proj_name}/api/*.pyo
 %{python_sitelib}/%{proj_name}/api/client
 %dir %{python_sitelib}/%{proj_name}/plugin
-%{python_sitelib}/%{proj_name}/plugin/*
+%{python_sitelib}/%{proj_name}/plugin/*.py
+%{python_sitelib}/%{proj_name}/plugin/*.pyc
+%{python_sitelib}/%{proj_name}/plugin/*.pyo
 %{python_sitelib}/%{proj_name}/cmd
 %{python_sitelib}/%{proj_name}-%{version}-py?.?.egg-info
 %{_sbindir}/%{proj_name}-init
-%{_bindir}/%{proj_name}-appentity
-%{_bindir}/%{proj_name}-group
-%{_bindir}/%{proj_name}-objfile
-%{_bindir}/%{proj_name}-package
-%{_bindir}/%{proj_name}-select
+#%{_bindir}/%{proj_name}-appentity
 %doc README.md
 %doc doc/*
 
@@ -81,13 +79,15 @@ Requires:       python-goperation-server < 1.1
 
 
 %description server
-Goperation database wsgi routes
+Flutter comic wsgi routes
 
 %files server
 %defattr(-,root,root,-)
 %dir %{python_sitelib}/%{proj_name}/api/wsgi
 %{python_sitelib}/%{proj_name}/api/wsgi/*
-%{_sysconfdir}/goperation/endpoints/gogamechen1.server.conf.sample
+%dir %{python_sitelib}/%{proj_name}/plugin/wsgi
+%{python_sitelib}/%{proj_name}/plugin/wsgi/*
+%{_sysconfdir}/goperation/endpoints/fluttercomic.server.conf.sample
 
 
 %package agent
@@ -104,7 +104,8 @@ Goperation xiaochen go game rpc agent
 %defattr(-,root,root,-)
 %dir %{python_sitelib}/%{proj_name}/api/rpc
 %{python_sitelib}/%{proj_name}/api/rpc/*
-%{_sysconfdir}/goperation/endpoints/gogamechen1.agent.conf.sample
+%{_sysconfdir}/goperation/endpoints/fluttercomic.agent.conf.sample
+#%{_bindir}/%{proj_name}-new-chapter
 
 
 %changelog

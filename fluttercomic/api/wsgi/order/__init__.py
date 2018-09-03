@@ -71,6 +71,3 @@ class OrderRequest(MiddlewareContorller):
     @verify(manager=True)
     def show(self, req, oid, body=None):
         """订单详情"""
-
-
-
