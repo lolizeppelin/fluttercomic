@@ -65,7 +65,7 @@ install -p -D -m 0754 bin/* %{buildroot}%{_bindir}
 %{python_sitelib}/%{proj_name}/cmd
 %{python_sitelib}/%{proj_name}-%{version}-py?.?.egg-info
 %{_sbindir}/%{proj_name}-init
-#%{_bindir}/%{proj_name}-appentity
+#%{_bindir}/%{proj_name}-upload
 %doc README.md
 %doc doc/*
 
@@ -104,6 +104,8 @@ Goperation xiaochen go game rpc agent
 %defattr(-,root,root,-)
 %dir %{python_sitelib}/%{proj_name}/api/rpc
 %{python_sitelib}/%{proj_name}/api/rpc/*
+%dir %{python_sitelib}/%{proj_name}/websocket
+%{python_sitelib}/%{proj_name}/websocket/*
 %{_sysconfdir}/goperation/endpoints/fluttercomic.agent.conf.sample
 #%{_bindir}/%{proj_name}-new-chapter
 
