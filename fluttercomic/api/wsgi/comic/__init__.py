@@ -38,7 +38,7 @@ from fluttercomic.models import Comic
 from fluttercomic.models import Order
 from fluttercomic.api import endpoint_session
 from fluttercomic.api.wsgi.token import verify
-from fluttercomic.api.wsgi.token import find_user
+from fluttercomic.api.wsgi.token import online
 from fluttercomic.api.wsgi.utils import format_chapters
 
 
@@ -95,6 +95,7 @@ class ComicRequest(MiddlewareContorller):
                                               last=comic.last,
                                               lastup=comic.lastup)
                                          for comic in query])
+
     @verify(manager=True)
     def create(self, req, body=None):
         """创建新漫画"""
@@ -118,8 +119,8 @@ class ComicRequest(MiddlewareContorller):
         if comic.status < 0:
             raise
         chapters = None
-        uid = find_user(req)
-        if uid:
+        uid = online(req)
+        if uid:             #  已登陆,token经过校验
             query = model_query(session, UserOwn.chapters, filter=and_(UserOwn.uid == uid, UserOwn.cid == cid))
             owns = query.one()
             chapters = owns.chapters
@@ -145,7 +146,6 @@ class ComicRequest(MiddlewareContorller):
     def buy(self, req, cid, chapter, uid, body=None):
         """购买一个章节"""
         body = body or {}
-        uid = find_user(req)
         session = endpoint_session()
         query = model_query(session, Comic, filter=Comic.cid == cid)
         uquery = session.query(User).filter(User.uid == uid).with_for_update(nowait=True)
@@ -256,6 +256,7 @@ class ComicRequest(MiddlewareContorller):
                                                                                     name=comic.name,
                                                                                     token=token,
                                                                                     host=host, port=port)])
+
     @verify(manager=True)
     def finished(self, req, cid, chapter, body=None):
         """章节上传完成 通知开放"""
@@ -278,7 +279,6 @@ class ComicRequest(MiddlewareContorller):
             comic.chapters = msgpack.packb(chapters)
             session.flush()
         return resultutils.results(result='finished comic success', data=[dict(cid=comic.cid, name=comic.name)])
-
 
     @verify(manager=True)
     def unfinish(self, req, cid, chapter, body=None):

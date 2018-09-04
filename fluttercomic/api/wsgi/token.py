@@ -15,7 +15,7 @@ def verify(manager=True):
     return _check
 
 
-def find_user(req):
+def online(req):
     """支持位登陆用户"""
     if not TokenProvider.is_fernet(req):
         return None

@@ -17,6 +17,8 @@ register_opts(group)
 
 class Routers(router.RoutersBase):
 
+    resource_name = 'fluttercomicplat'
+
     def append_routers(self, mapper, routers=None):
 
         conf = CONF[common.NAME]

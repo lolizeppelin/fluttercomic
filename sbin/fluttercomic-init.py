@@ -1,0 +1,26 @@
+#!/usr/bin/python
+import logging
+
+from simpleutil.config import cfg
+from simpleservice.ormdb.tools.config import database_init_opts
+from simpleservice.ormdb.tools import utils as dbutils
+
+from fluttercomic.cmd.db import utils
+
+dbutils.LOG = logging
+
+
+def main():
+    logging.basicConfig(level=logging.WARN)
+    conf = cfg.ConfigOpts()
+    conf.register_cli_opts(database_init_opts)
+    conf()
+    utils.init_fluttercomic(db_info=dict(user=conf.user,
+                                         passwd=conf.passwd,
+                                         host=conf.host,
+                                         port=str(conf.port),
+                                         schema=conf.schema))
+
+
+if __name__ == '__main__':
+    main()

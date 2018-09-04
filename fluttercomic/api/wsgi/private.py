@@ -1,13 +1,8 @@
-from simpleservice.wsgi import router
-from simpleservice.wsgi.middleware import controller_return_response
-
+# -*- coding:utf-8 -*-
 from fluttercomic import common
-from fluttercomic.api.wsgi import user
 from fluttercomic.api.wsgi import comic
-from fluttercomic.api.wsgi import order
-from fluttercomic.api.wsgi import manager
-
-
+from fluttercomic.api.wsgi import user
+from simpleservice.wsgi import router
 
 COLLECTION_ACTIONS = ['index', 'create']
 MEMBER_ACTIONS = ['show', 'update', 'delete']
@@ -15,28 +10,32 @@ MEMBER_ACTIONS = ['show', 'update', 'delete']
 
 class Routers(router.RoutersBase):
 
+    """必须经过认证拦截器的路由"""
+
+    resource_name = 'fluttercomicpri'
+
+
+
     def append_routers(self, mapper, routers=None):
 
         user_controller = user.UserRequest()
 
-        collection = mapper.collection(collection_name='user',
-                                       resource_name='users',
+        collection = mapper.collection(collection_name='fcuser_pris',
+                                       resource_name='fcusers_pri',
                                        controller=user_controller,
-                                       path_prefix='/%s' % common.NAME,
+                                       path_prefix='/%s/private' % common.NAME,
                                        member_prefix='/{uid}',
-                                       collection_actions=COLLECTION_ACTIONS,
-                                       member_actions=MEMBER_ACTIONS)
-        collection.member.link('login', method='PUT')
+                                       collection_actions=['index'],
+                                       member_actions=['show', 'update', 'delete'])
         collection.member.link('books', method='GET')
         collection.member.link('order', method='PUT')
 
 
-
         comic_controller = comic.ComicRequest()
-        mapper.collection(collection_name='comic',
-                          resource_name='comics',
+        mapper.collection(collection_name='fcomic_pris',
+                          resource_name='fcomics_pri',
                           controller=comic_controller,
-                          path_prefix='/%s' % common.NAME,
+                          path_prefix='/%s/private' % common.NAME,
                           member_prefix='/{cid}',
                           collection_actions=COLLECTION_ACTIONS,
                           member_actions=MEMBER_ACTIONS)
