@@ -107,7 +107,7 @@ Goperation xiaochen go game rpc agent
 %dir %{python_sitelib}/%{proj_name}/websocket
 %{python_sitelib}/%{proj_name}/websocket/*
 %{_sysconfdir}/goperation/endpoints/fluttercomic.agent.conf.sample
-#%{_bindir}/%{proj_name}-upload
+%{_bindir}/%{proj_name}-upload
 
 
 %changelog
