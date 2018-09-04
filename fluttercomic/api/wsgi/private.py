@@ -20,7 +20,7 @@ class Routers(router.RoutersBase):
 
         user_controller = user.UserRequest()
 
-        collection = mapper.collection(collection_name='fcuser_pris',
+        collection = mapper.collection(collection_name='users',
                                        resource_name='fcusers_pri',
                                        controller=user_controller,
                                        path_prefix='/%s/private' % common.NAME,
@@ -32,7 +32,7 @@ class Routers(router.RoutersBase):
 
 
         comic_controller = comic.ComicRequest()
-        mapper.collection(collection_name='fcomic_pris',
+        mapper.collection(collection_name='comics',
                           resource_name='fcomics_pri',
                           controller=comic_controller,
                           path_prefix='/%s/private' % common.NAME,
