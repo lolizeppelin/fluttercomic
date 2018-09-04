@@ -1,6 +1,6 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
-%define proj_name fluttercommic
+%define proj_name fluttercomic
 
 %define _release RELEASEVERSION
 
