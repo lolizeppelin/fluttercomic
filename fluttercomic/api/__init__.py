@@ -20,7 +20,7 @@ def init_endpoint_session():
     if DbDriver is None:
         with lock.get('mysql-%s' % common.NAME):
             if DbDriver is None:
-                LOG.info("Try connect database for %s" % CONF[common.NAME])
+                LOG.info("Try connect database for %s" % common.NAME)
                 mysql_driver = MysqlDriver(common.NAME, CONF[common.NAME])
                 mysql_driver.start()
                 DbDriver = mysql_driver
