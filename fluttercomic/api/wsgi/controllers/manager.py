@@ -88,9 +88,9 @@ class ManagerRequest(MiddlewareContorller):
     def show(self, req, mid, body=None):
         """列出用户信息"""
         session = endpoint_session(readonly=True)
-        query = model_query(session, User, filter=User.uid == uid)
+        query = model_query(session, User, filter=User.uid == mid)
         user = query.one()
-        query = model_query(session, UserBook, filter=UserBook.uid == uid)
+        query = model_query(session, UserBook, filter=UserBook.uid == mid)
         return resultutils.results(result='show user success',
                                    data=[dict(name=user.name, coins=user.coins,
                                               books=[dict(cid=book.cid, name=book.name)
@@ -109,14 +109,14 @@ class ManagerRequest(MiddlewareContorller):
         body = body or {}
         passwd = body.get('passwd')
         session = endpoint_session(readonly=True)
-        query = model_query(session, User, filter=User.uid == uid)
+        query = model_query(session, User, filter=User.uid == mid)
         user = query.one()
         if not passwd:
             raise InvalidArgument('Need passwd')
         if user.password != digestutils.strmd5(user.salt.encode('utf-8') + passwd):
             raise InvalidArgument('Password error')
-        token = TokenProvider.create(req, dict(uid=uid, name=user.name), 3600)
-        query = model_query(session, UserBook, filter=UserBook.uid == uid)
+        token = TokenProvider.create(req, dict(uid=mid, name=user.name), 3600)
+        query = model_query(session, UserBook, filter=UserBook.uid == mid)
         return resultutils.results(result='login success',
                                    data=[dict(token=token, name=user.name, coins=user.coins,
                                               books=[dict(cid=book.cid, name=book.name)
