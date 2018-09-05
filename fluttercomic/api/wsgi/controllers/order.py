@@ -24,9 +24,11 @@ from fluttercomic.api.wsgi.token import verify
 
 LOG = logging.getLogger(__name__)
 
-FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
-             NoResultFound: webob.exc.HTTPNotFound,
-             MultipleResultsFound: webob.exc.HTTPInternalServerError}
+FAULT_MAP = {
+    InvalidArgument: webob.exc.HTTPClientError,
+    NoResultFound: webob.exc.HTTPNotFound,
+    MultipleResultsFound: webob.exc.HTTPInternalServerError
+}
 
 
 Idformater = argutils.Idformater(key='request_id', formatfunc='request_id_check')

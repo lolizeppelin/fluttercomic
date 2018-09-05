@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+import msgpack
 import sqlalchemy as sa
 from sqlalchemy.ext import declarative
 
@@ -16,11 +17,11 @@ from simpleservice.ormdb.models import MyISAMTableBase
 
 from simpleutil.utils import uuidutils
 
-from goperation.manager import common as manager_common
-
 from fluttercomic import common
 
 TableBase = declarative.declarative_base(cls=TableBase)
+
+EMPTYLIST = msgpack.unpackb([])
 
 
 class Manager(TableBase):
@@ -69,7 +70,7 @@ class Comic(TableBase):
     point = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)         # 条件点
     last = sa.Column(SMALLINT(unsigned=True), nullable=False, default=0)         # 最后章节
     lastup = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)        # 最后更新时间
-    chapters = sa.Column(BLOB, nullable=False, default='[]')                     # 章节信息
+    chapters = sa.Column(BLOB, nullable=False, default=EMPTYLIST)                # 章节信息
 
     __table_args__ = (
         sa.Index('name_index', 'name'),
@@ -97,7 +98,7 @@ class UserOwn(TableBase):
                     primary_key=True)                                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
-    chapters = sa.Column(BLOB, nullable=False, default='[]')                    # 拥有章节
+    chapters = sa.Column(BLOB, nullable=False, default=EMPTYLIST)               # 拥有章节
 
     __table_args__ = (
         InnoDBTableBase.__table_args__
