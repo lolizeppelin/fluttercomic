@@ -25,6 +25,7 @@ class UserPublicRouters(router.ComposableRouter):
                                        member_actions=[])
         collection.member.link('login', method='PUT')
 
+
 @singleton.singleton
 class ComicPublicRouters(router.ComposableRouter):
 
@@ -38,6 +39,7 @@ class ComicPublicRouters(router.ComposableRouter):
                           member_prefix='/{cid}',
                           collection_actions=['index'],
                           member_actions=['show'])
+
 
 @singleton.singleton
 class ManagerPublicRouters(router.ComposableRouter):

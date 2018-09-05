@@ -26,6 +26,7 @@ class UserPrivateRouters(router.ComposableRouter):
         collection.member.link('books', method='GET')
         collection.member.link('order', method='PUT')
 
+
 @singleton.singleton
 class ComicPrivateRouters(router.ComposableRouter):
 
@@ -91,6 +92,7 @@ class ComicPrivateRouters(router.ComposableRouter):
                        path='/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
                        controller=comic_controller, action='unfinish',
                        conditions=dict(method=['DELETE']))
+
 
 @singleton.singleton
 class ManagerPrivateRouters(router.ComposableRouter):
