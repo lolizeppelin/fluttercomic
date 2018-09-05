@@ -47,7 +47,7 @@ class ManagerPublicRouters(router.ComposableRouter):
         collection = mapper.collection(collection_name='managers',
                                        resource_name='manager',
                                        controller=manager_controller,
-                                       path_prefix='/%s/private' % common.NAME,
+                                       path_prefix='/%s/public' % common.NAME,
                                        member_prefix='/{mid}',
                                        collection_actions=[],
                                        member_actions=[])

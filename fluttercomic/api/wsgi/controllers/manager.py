@@ -115,6 +115,8 @@ class ManagerRequest(MiddlewareContorller):
             raise InvalidArgument('Need passwd')
         if user.password != digestutils.strmd5(user.salt.encode('utf-8') + passwd):
             raise InvalidArgument('Password error')
+        if TokenProvider.is_fernet(req):
+            raise
         token = TokenProvider.create(req, dict(uid=mid, name=user.name), 3600)
         query = model_query(session, UserBook, filter=UserBook.uid == mid)
         return resultutils.results(result='login success',

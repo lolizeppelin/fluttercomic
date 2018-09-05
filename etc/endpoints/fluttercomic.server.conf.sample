@@ -8,10 +8,10 @@
 #
 
 # Extend route module string (multi import string)
-#routes = fluttercomic.api.wsgi.private
+#routes = fluttercomic.api.wsgi.routers.private
 
 # Public open route module string (multi import string)
-#publics = fluttercomic.api.wsgi.public
+#publics = fluttercomic.api.wsgi.routers.public
 #publics = fluttercomic.plugin.wsgi.platforms.routers
 
 # The SQLAlchemy connection string to use to connect to the database. (string
