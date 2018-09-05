@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from simpleutil.utils import singleton
 from simpleservice.wsgi import router
-
+from simpleservice.wsgi.middleware import controller_return_response
 
 from fluttercomic import common
 from fluttercomic.api.wsgi.controllers import comic
@@ -15,7 +15,7 @@ class UserPrivateRouters(router.ComposableRouter):
     """必须经过认证拦截器的路由"""
 
     def add_routes(self, mapper):
-        user_controller = user.UserRequest()
+        user_controller = controller_return_response(user.UserRequest(), user.FAULT_MAP)
         collection = mapper.collection(collection_name='users',
                                        resource_name='user',
                                        controller=user_controller,
@@ -31,7 +31,7 @@ class ComicPrivateRouters(router.ComposableRouter):
 
     def add_routes(self, mapper):
 
-        comic_controller = comic.ComicRequest()
+        comic_controller = controller_return_response(comic.ComicRequest(), comic.FAULT_MAP)
 
         mapper.collection(collection_name='comics',
                           resource_name='comic',
@@ -97,7 +97,7 @@ class ManagerPrivateRouters(router.ComposableRouter):
 
     def add_routes(self, mapper):
 
-        manager_controller = manager.ManagerRequest()
+        manager_controller = controller_return_response(manager.ManagerRequest(), manager.FAULT_MAP)
         collection = mapper.collection(collection_name='managers',
                                        resource_name='manager',
                                        controller=manager_controller,

@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 from simpleutil.utils import singleton
 from simpleservice.wsgi import router
+from simpleservice.wsgi.middleware import controller_return_response
 
 from fluttercomic import common
 from fluttercomic.api.wsgi.controllers import comic
@@ -13,7 +14,7 @@ class UserPublicRouters(router.ComposableRouter):
 
     def add_routes(self, mapper):
 
-        user_controller = user.UserRequest()
+        user_controller = controller_return_response(user.UserRequest(), user.FAULT_MAP)
 
         collection = mapper.collection(collection_name='users',
                                        resource_name='user',
@@ -29,7 +30,7 @@ class ComicPublicRouters(router.ComposableRouter):
 
     def add_routes(self, mapper):
 
-        comic_controller = comic.ComicRequest()
+        comic_controller = controller_return_response(comic.ComicRequest(), comic.FAULT_MAP)
         mapper.collection(collection_name='comics',
                           resource_name='comic',
                           controller=comic_controller,
@@ -43,7 +44,7 @@ class ManagerPublicRouters(router.ComposableRouter):
 
     def add_routes(self, mapper):
 
-        manager_controller = manager.ManagerRequest()
+        manager_controller = controller_return_response(manager.ManagerRequest(), manager.FAULT_MAP)
         collection = mapper.collection(collection_name='managers',
                                        resource_name='manager',
                                        controller=manager_controller,
