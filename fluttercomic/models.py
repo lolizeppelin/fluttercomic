@@ -21,7 +21,7 @@ from fluttercomic import common
 
 TableBase = declarative.declarative_base(cls=TableBase)
 
-EMPTYLIST = msgpack.unpackb([])
+EMPTYLIST = msgpack.packb([])
 
 
 class Manager(TableBase):
