@@ -105,14 +105,13 @@ class UserRequest(MiddlewareContorller):
     @verify(manager=False)
     def show(self, req, uid, body=None):
         """列出用户信息"""
+        uid = int(uid)
         session = endpoint_session(readonly=True)
         query = model_query(session, User, filter=User.uid == uid)
         user = query.one()
-        query = model_query(session, UserBook, filter=UserBook.uid == uid)
         return resultutils.results(result='show user success',
-                                   data=[dict(name=user.name, coins=user.coins,
-                                              books=[dict(cid=book.cid, name=book.name)
-                                                     for book in query])])
+                                   data=[dict(name=user.name, uid=user.uid,
+                                              coins=(user.coins + user.gifts))])
 
     @verify(manager=True)
     def update(self, uid, body=None):
@@ -127,22 +126,23 @@ class UserRequest(MiddlewareContorller):
         body = body or {}
         passwd = body.get('passwd')
         session = endpoint_session(readonly=True)
-        query = model_query(session, User, filter=User.uid == uid)
+        query = model_query(session, User, filter=User.name == uid)
         user = query.one()
         if not passwd:
             raise InvalidArgument('Need passwd')
         if user.password != digestutils.strmd5(user.salt.encode('utf-8') + passwd):
             raise InvalidArgument('Password error')
-        token = TokenProvider.create(req, dict(uid=uid, name=user.name), 3600)
-        query = model_query(session, UserBook, filter=UserBook.uid == uid)
+        token = TokenProvider.create(req, dict(uid=user.uid, name=user.name), 3600)
         return resultutils.results(result='login success',
-                                   data=[dict(token=token, name=user.name, coins=user.coins,
-                                              books=[dict(cid=book.cid, name=book.name)
-                                                     for book in query])])
+                                   data=[dict(token=token,
+                                              name=user.name,
+                                              uid=user.uid,
+                                              coins=(user.coins + user.gifts))])
 
     @verify(manager=False)
     def books(self, req, uid, body=None):
         """列出收藏的漫画"""
+        uid = int(uid)
         session = endpoint_session(readonly=True)
         query = model_query(session, UserBook, filter=UserBook.uid == uid)
         return resultutils.results(result='get book success',
@@ -151,6 +151,7 @@ class UserRequest(MiddlewareContorller):
     @verify(manager=False)
     def order(self, req, uid, body=None):
         """创建充值订单"""
+        uid = int(uid)
         body = body or {}
         coin = body.get('coin')
         money = coin * common.PROPORTION
