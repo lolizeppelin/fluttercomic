@@ -125,8 +125,9 @@ class ComicRequest(MiddlewareContorller):
         uid = online(req)
         if uid:             #  已登陆,token经过校验
             query = model_query(session, UserOwn.chapters, filter=and_(UserOwn.uid == uid, UserOwn.cid == cid))
-            owns = query.one()
-            chapters = owns.chapters
+            owns = query.one_or_none()
+            if owns:
+                chapters = owns.chapters
         elif comic.status == common.HIDE:
             raise
         return resultutils.results(result='show comic success',
