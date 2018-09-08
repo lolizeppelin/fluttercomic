@@ -115,6 +115,7 @@ class ComicRequest(MiddlewareContorller):
 
     def show(self, req, cid, body=None):
         """显示漫画详细, 自动确认用户是否登陆"""
+        cid = int(cid)
         session = endpoint_session(readonly=True)
         query = model_query(session, Comic, filter=Comic.cid == cid)
         comic = query.one()
@@ -147,6 +148,9 @@ class ComicRequest(MiddlewareContorller):
     @verify(manager=False)
     def buy(self, req, cid, chapter, uid, body=None):
         """购买一个章节"""
+        cid = int(cid)
+        chapter = int(chapter)
+        uid = int(uid)
         body = body or {}
         session = endpoint_session()
         query = model_query(session, Comic, filter=Comic.cid == cid)
@@ -203,6 +207,8 @@ class ComicRequest(MiddlewareContorller):
     @verify(manager=False)
     def mark(self, req, cid, uid, body=None):
         """收藏漫画"""
+        cid = int(cid)
+        uid = int(uid)
         session = endpoint_session()
         if model_count_with_key(session, User, filter=UserBook.uid == uid) >= common.MAXBOOKS:
             raise
@@ -219,6 +225,8 @@ class ComicRequest(MiddlewareContorller):
     @verify(manager=False)
     def unmark(self, req, cid, uid, body=None):
         """取消收藏"""
+        cid = int(cid)
+        uid = int(uid)
         session = endpoint_session()
         query = model_query(session, UserBook, filter=and_(User.uid == uid, UserBook.cid == cid))
         book = query.one_or_none()
@@ -230,6 +238,8 @@ class ComicRequest(MiddlewareContorller):
     @verify(manager=True)
     def new(self, req, cid, chapter, body=None):
         """添加新章节"""
+        cid = int(cid)
+        chapter = int(chapter)
         body = body or {}
         source = body.get('source')
         session = endpoint_session()
@@ -262,6 +272,8 @@ class ComicRequest(MiddlewareContorller):
     @verify(manager=True)
     def finished(self, req, cid, chapter, body=None):
         """章节上传完成 通知开放"""
+        cid = int(cid)
+        chapter = int(chapter)
         body = body or {}
         max = body.get('max')           # 章节最大页数
         key = body.get('key')           # 加密key
@@ -285,6 +297,8 @@ class ComicRequest(MiddlewareContorller):
     @verify(manager=True)
     def unfinish(self, req, cid, chapter, body=None):
         """章节上传完成 失败, 通知还原"""
+        cid = int(cid)
+        chapter = int(chapter)
         body = body or {}
         session = endpoint_session()
         query = session.query(User).filter(Comic.cid == cid).with_for_update()

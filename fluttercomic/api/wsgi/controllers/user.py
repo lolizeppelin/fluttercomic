@@ -173,3 +173,4 @@ class UserRequest(MiddlewareContorller):
     @verify(manager=True)
     def gitf(self, req, uid, body=None):
         """后台发送gift接口"""
+        raise NotImplementedError('gift~~')

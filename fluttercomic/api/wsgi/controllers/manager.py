@@ -88,6 +88,7 @@ class ManagerRequest(MiddlewareContorller):
     @verify(manager=True)
     def show(self, req, mid, body=None):
         """列出用户信息"""
+        mid = int(mid)
         session = endpoint_session(readonly=True)
         query = model_query(session, User, filter=User.uid == mid)
         user = query.one()
@@ -107,6 +108,7 @@ class ManagerRequest(MiddlewareContorller):
 
     def login(self, req, mid, body=None):
         """管理员登录"""
+        mid = int(mid)
         body = body or {}
         passwd = body.get('passwd')
         session = endpoint_session(readonly=True)
