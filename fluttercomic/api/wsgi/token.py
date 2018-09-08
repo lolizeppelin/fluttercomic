@@ -23,6 +23,8 @@ def online(req):
         token = TokenProvider.token(req)
     except KeyError:
         token_id = req.headers.get(service_common.TOKENNAME.lower())
+        if not token_id:
+            return None
         token = TokenProvider.fetch(req, token_id)
     return token.get('uid')
 
