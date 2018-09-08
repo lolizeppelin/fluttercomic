@@ -43,7 +43,7 @@ class FlutterComicClient(GopHttpClientApi):
 
     def user_show(self, uid, token, body=None):
         headers = {common.TOKENNAME: token, common.FERNETHEAD: 'yes'}
-        resp, results = self.get(action=self.user_path % (self.PRIVATE, uid), headers=headers, body=body)
+        resp, results = self.get(action=self.user_path % (self.PRIVATE, str(uid)), headers=headers, body=body)
         if results['resultcode'] != common.RESULT_SUCCESS:
             raise ServerExecuteRequestError(message='show fluttercomic user fail:%d' % results['resultcode'],
                                             code=resp.status_code,
@@ -87,8 +87,9 @@ class FlutterComicClient(GopHttpClientApi):
         return results
 
     def user_login(self, uid, body=None):
-        resp, results = self.put(action=self.user_path_ex % (self.PUBLIC, uid, 'login'), body=body,
-                                 version=self.PRIVATEVERESION)
+        headers = { common.FERNETHEAD: 'yes'}
+        resp, results = self.put(action=self.user_path_ex % (self.PUBLIC, uid, 'login'), headers=headers,
+                                 body=body, version=self.PRIVATEVERESION)
         if results['resultcode'] != common.RESULT_SUCCESS:
             raise ServerExecuteRequestError(message='fluttercomic user login fail:%d' % results['resultcode'],
                                             code=resp.status_code,

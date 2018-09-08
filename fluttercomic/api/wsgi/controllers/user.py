@@ -130,8 +130,10 @@ class UserRequest(MiddlewareContorller):
         user = query.one()
         if not passwd:
             raise InvalidArgument('Need passwd')
-        if user.password != digestutils.strmd5(user.salt.encode('utf-8') + passwd):
+        if user.passwd != digestutils.strmd5(user.salt + passwd):
             raise InvalidArgument('Password error')
+        if not TokenProvider.is_fernet(req):
+            raise InvalidArgument('Not supported for uuid token')
         token = TokenProvider.create(req, dict(uid=user.uid, name=user.name), 3600)
         return resultutils.results(result='login success',
                                    data=[dict(token=token,

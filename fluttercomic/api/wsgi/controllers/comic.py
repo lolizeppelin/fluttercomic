@@ -89,7 +89,7 @@ class ComicRequest(MiddlewareContorller):
         """列出漫画"""
         session = endpoint_session(readonly=True)
         query = model_query(session, Comic)
-        return resultutils.results(result='show comic success',
+        return resultutils.results(result='list comics success',
                                    data=[dict(cid=comic.cid,
                                               name=comic.name,
                                               author=comic.author,
