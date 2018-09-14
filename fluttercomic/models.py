@@ -128,17 +128,19 @@ class UserPayLog(TableBase):
 class Order(TableBase):
     """预备订单"""
     oid = sa.Column(BIGINT(unsigned=True), nullable=False,
-                   default=uuidutils.Gkey, primary_key=True)                    # 订单ID
+                    default=uuidutils.Gkey, primary_key=True)                   # 订单ID
     uid = sa.Column(INTEGER(unsigned=True), nullable=False)                     # 用户id
     coins = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 订单发起时用户coins(不加锁,有可能不准)
+    gifts = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 订单发起时用户gifts(不加锁,有可能不准)
     coin = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单coin数量
+    gift = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单gift数量
     money = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 金钱数量
     platform = sa.Column(VARCHAR(32), nullable=True)                            # 订单类型平台
     serial = sa.Column(VARCHAR(128), nullable=True)                             # 流水号
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单时间
     cid = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)          # 订单发起时用户所看漫画
     chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所看章节
-    ext = sa.Column(BLOB, nullable=TableBase)                                   # 扩展信息
+    ext = sa.Column(BLOB, nullable=True)                                        # 扩展信息
 
     __table_args__ = (
         sa.UniqueConstraint('serial', name='serial_unique'),
@@ -150,13 +152,17 @@ class Order(TableBase):
 class RechargeLog(TableBase):
     """成功充值票据"""
     oid = sa.Column(BIGINT(unsigned=True), nullable=False,
-                   primary_key=True)                                            # 订单ID
-    coins = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 充值前用户coins(加锁,准确)
+                    primary_key=True)                                           # 订单ID
+    uid = sa.Column(INTEGER(unsigned=True), nullable=False)                     # 用户id
+    coins = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 完成充值前用户coins(加锁,准确)
+    gifts = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 完成充值前用户gifts(加锁,准确)
     coin = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单coin数量
     gift = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单gift数量
     money = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 金钱数量
-    time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 完成时间
     platform = sa.Column(VARCHAR(32), nullable=True)                            # 订单类型平台
+    time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 完成时间
+    cid = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)          # 订单发起时用户所看漫画
+    chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所看章节
     __table_args__ = (
         MyISAMTableBase.__table_args__
     )

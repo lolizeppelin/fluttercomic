@@ -30,6 +30,7 @@ from goperation.manager.utils import resultutils
 from goperation.manager.tokens import TokenProvider
 
 from fluttercomic import common
+from fluttercomic.models import Manager
 from fluttercomic.models import User
 from fluttercomic.models import UserBook
 from fluttercomic.models import UserOwn
@@ -108,25 +109,38 @@ class ManagerRequest(MiddlewareContorller):
 
     def login(self, req, mid, body=None):
         """管理员登录"""
-        mid = int(mid)
         body = body or {}
         passwd = body.get('passwd')
         session = endpoint_session(readonly=True)
-        query = model_query(session, User, filter=User.uid == mid)
-        user = query.one()
+        query = model_query(session, Manager, filter=Manager.name == mid)
+        manager = query.one()
         if not passwd:
             raise InvalidArgument('Need passwd')
-        if user.password != digestutils.strmd5(user.salt.encode('utf-8') + passwd):
+        if manager.password != digestutils.strmd5(manager.salt.encode('utf-8') + passwd):
             raise InvalidArgument('Password error')
         if TokenProvider.is_fernet(req):
-            raise
-        token = TokenProvider.create(req, dict(uid=mid, name=user.name), 3600)
-        query = model_query(session, UserBook, filter=UserBook.uid == mid)
-        return resultutils.results(result='login success',
-                                   data=[dict(token=token, name=user.name, coins=user.coins,
-                                              books=[dict(cid=book.cid, name=book.name)
-                                                     for book in query])])
+            raise InvalidArgument('Manager use uuid token')
+        token = TokenProvider.create(req, dict(uid=mid, name=manager.name), 3600)
+        return resultutils.results(result='manager login success',
+                                   data=[dict(token=token, name=manager.name, mid=manager.mid)])
 
     @verify(manager=True)
     def loginout(self, req, mid, body=None):
-        pass
+        body = body or {}
+        mid = int(mid)
+        session = endpoint_session(readonly=True)
+        query = model_query(session, Manager, filter=Manager.mid == mid)
+        manager = query.one()
+        if TokenProvider.is_fernet(req):
+            raise InvalidArgument('Manager use uuid token')
+        token_id = TokenProvider.getid(req)
+        if not token_id:
+            raise InvalidArgument('Not token find, not login?')
+
+        def checker(token):
+            if token.get('mid') != mid:
+                raise InvalidArgument('Mnager id not the same')
+
+        TokenProvider.delete(req, token_id, checker)
+        return resultutils.results(result='manager loginout success',
+                                   data=[dict(name=manager.name, mid=manager.mid)])
