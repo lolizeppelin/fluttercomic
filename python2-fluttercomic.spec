@@ -65,8 +65,8 @@ install -p -D -m 0754 bin/* %{buildroot}%{_bindir}
 %{python_sitelib}/%{proj_name}/cmd
 %{python_sitelib}/%{proj_name}-%{version}-py?.?.egg-info
 %{_sbindir}/%{proj_name}-init
-#%{_bindir}/%{proj_name}-upload
-#%{_bindir}/%{proj_name}-resize
+%{_bindir}/%{proj_name}-upload
+%{_bindir}/%{proj_name}-resize
 %doc README.md
 %doc doc/*
 
