@@ -83,7 +83,13 @@ class UserRequest(MiddlewareContorller):
 
     @verify(manager=True)
     def index(self, req, body=None):
-        raise NotImplementedError
+        session = endpoint_session(readonly=True)
+        query = model_query(session, User)
+        query = query.order_by(User.uid)
+        return resultutils.results(result='show user success',
+                                   data=[dict(name=user.name, uid=user.uid,
+                                              coins=user.coins, gitfs=user.gifts,
+                                              status=user.status, regtime=user.regtime) for user in query])
 
     def create(self, req, body=None):
         """创建用户"""
