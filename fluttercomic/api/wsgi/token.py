@@ -16,17 +16,20 @@ def verify(manager=True):
 
 
 def online(req):
-    """未登陆用户"""
-    if not TokenProvider.is_fernet(req):
-        return None
+    """登陆用户信息"""
     try:
         token = TokenProvider.token(req)
     except KeyError:
+        # 没有经过认证拦截器的必须是fernet token
+        if not TokenProvider.is_fernet(req):
+            return None, None
         token_id = req.headers.get(service_common.TOKENNAME.lower())
         if not token_id:
-            return None
+            # 为登陆用户
+            return None, None
+        # 解析fernet token
         token = TokenProvider.fetch(req, token_id)
-    return token.get('uid')
+    return token.get('uid'), token.get('mid')
 
 
 class TokenVerify(object):

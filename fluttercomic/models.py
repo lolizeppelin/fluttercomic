@@ -85,6 +85,7 @@ class UserBook(TableBase):
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
     name = sa.Column(VARCHAR(128), nullable=False)                              # 漫画名
+    author = sa.Column(VARCHAR(128), nullable=False)                            # 漫画作者
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 收藏时间
 
     __table_args__ = (

@@ -116,11 +116,11 @@ class ManagerRequest(MiddlewareContorller):
         manager = query.one()
         if not passwd:
             raise InvalidArgument('Need passwd')
-        if manager.password != digestutils.strmd5(manager.salt.encode('utf-8') + passwd):
+        if manager.passwd != digestutils.strmd5(manager.salt.encode('utf-8') + passwd):
             raise InvalidArgument('Password error')
         if TokenProvider.is_fernet(req):
             raise InvalidArgument('Manager use uuid token')
-        token = TokenProvider.create(req, dict(uid=mid, name=manager.name), 3600)
+        token = TokenProvider.create(req, dict(mid=mid, name=manager.name), 3600)
         return resultutils.results(result='manager login success',
                                    data=[dict(token=token, name=manager.name, mid=manager.mid)])
 

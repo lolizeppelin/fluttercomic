@@ -102,7 +102,7 @@ class UserRequest(MiddlewareContorller):
         return resultutils.results(result='crate user success',
                                    data=[dict(token=token, uid=user.uid, name=user.name)])
 
-    @verify(manager=False)
+    @verify(manager=True)
     def show(self, req, uid, body=None):
         """列出用户信息"""
         uid = int(uid)
@@ -111,7 +111,8 @@ class UserRequest(MiddlewareContorller):
         user = query.one()
         return resultutils.results(result='show user success',
                                    data=[dict(name=user.name, uid=user.uid,
-                                              coins=(user.coins + user.gifts))])
+                                              coins=user.coins, gitfs=user.gifts,
+                                              status=user.status, regtime=user.regtime)])
 
     @verify(manager=True)
     def update(self, uid, body=None):
@@ -148,7 +149,8 @@ class UserRequest(MiddlewareContorller):
         session = endpoint_session(readonly=True)
         query = model_query(session, UserBook, filter=UserBook.uid == uid)
         return resultutils.results(result='get book success',
-                                   data=[dict(cid=book.cid, name=book.name) for book in query])
+                                   data=[dict(cid=book.cid, name=book.name, author=book.author)
+                                         for book in query])
 
     @verify(manager=False)
     def order(self, req, uid, body=None):

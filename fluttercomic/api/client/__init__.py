@@ -10,6 +10,10 @@ class FlutterComicClient(GopHttpClientApi):
     user_path = '/fluttercomic/%s/users/%s'
     user_path_ex = '/fluttercomic/%s/users/%s/%s'
 
+    managers_path = '/fluttercomic/%s/managers'
+    manager_path = '/fluttercomic/%s/managers/%s'
+    manager_path_ex = '/fluttercomic/%s/managers/%s/%s'
+
     comics_path = '/fluttercomic/%s/comics'
     comic_path = '/fluttercomic/%s/comics/%s'
 
@@ -20,7 +24,7 @@ class FlutterComicClient(GopHttpClientApi):
     PRIVATE = 'private'
     PUBLIC = 'public'
 
-    PRIVATEVERESION = 'n1.0'
+    PUBLICVERSION = 'n1.0'
 
     # -----------users api-----------------
     def users_index(self, token, body=None):
@@ -34,7 +38,7 @@ class FlutterComicClient(GopHttpClientApi):
 
     def users_create(self, body=None):
         resp, results = self.retryable_post(action=self.users_path % self.PUBLIC,
-                                            body=body, version=self.PRIVATEVERESION)
+                                            body=body, version=self.PUBLICVERSION)
         if results['resultcode'] != common.RESULT_SUCCESS:
             raise ServerExecuteRequestError(message='create fluttercomic user fail:%d' % results['resultcode'],
                                             code=resp.status_code,
@@ -89,16 +93,62 @@ class FlutterComicClient(GopHttpClientApi):
     def user_login(self, uid, body=None):
         headers = { common.FERNETHEAD: 'yes'}
         resp, results = self.put(action=self.user_path_ex % (self.PUBLIC, uid, 'login'), headers=headers,
-                                 body=body, version=self.PRIVATEVERESION)
+                                 body=body, version=self.PUBLICVERSION)
         if results['resultcode'] != common.RESULT_SUCCESS:
             raise ServerExecuteRequestError(message='fluttercomic user login fail:%d' % results['resultcode'],
                                             code=resp.status_code,
                                             resone=results['result'])
         return results
 
+    # ----------managers api---------------
+    def managers_index(self, token, body=None):
+        headers = {common.TOKENNAME: token}
+        resp, results = self.get(action=self.managers_path % self.PRIVATE, headers=headers, body=body)
+        if results['resultcode'] != common.RESULT_SUCCESS:
+            raise ServerExecuteRequestError(message='list fluttercomic manager fail:%d' % results['resultcode'],
+                                            code=resp.status_code,
+                                            resone=results['result'])
+        return results
+
+    def manager_show(self, mid, token, body=None):
+        headers = {common.TOKENNAME: token}
+        resp, results = self.get(action=self.manager_path % (self.PRIVATE, str(mid)), headers=headers, body=body)
+        if results['resultcode'] != common.RESULT_SUCCESS:
+            raise ServerExecuteRequestError(message='show fluttercomic manager fail:%d' % results['resultcode'],
+                                            code=resp.status_code,
+                                            resone=results['result'])
+        return results
+
+    def manager_update(self, mid, token, body=None):
+        headers = {common.TOKENNAME: token}
+        resp, results = self.put(action=self.manager_path % (self.PRIVATE, str(mid)), headers=headers, body=body)
+        if results['resultcode'] != common.RESULT_SUCCESS:
+            raise ServerExecuteRequestError(message='update fluttercomic manager fail:%d' % results['resultcode'],
+                                            code=resp.status_code,
+                                            resone=results['result'])
+        return results
+
+    def manager_delete(self, mid, token, body=None):
+        headers = {common.TOKENNAME: token}
+        resp, results = self.delete(action=self.manager_path % (self.PRIVATE, str(mid)), headers=headers, body=body)
+        if results['resultcode'] != common.RESULT_SUCCESS:
+            raise ServerExecuteRequestError(message='delete fluttercomic manager fail:%d' % results['resultcode'],
+                                            code=resp.status_code,
+                                            resone=results['result'])
+        return results
+
+    def manager_login(self, mid, body=None):
+        resp, results = self.post(action=self.manager_path_ex % (self.PUBLIC, str(mid), 'login'),
+                                  body=body, version=self.PUBLICVERSION)
+        if results['resultcode'] != common.RESULT_SUCCESS:
+            raise ServerExecuteRequestError(message='fluttercomic manager login fail:%d' % results['resultcode'],
+                                            code=resp.status_code,
+                                            resone=results['result'])
+        return results
+
     # -----------comic api-----------------
     def comics_index(self, body=None):
-        resp, results = self.get(action=self.comics_path % self.PUBLIC, body=body, version=self.PRIVATEVERESION)
+        resp, results = self.get(action=self.comics_path % self.PUBLIC, body=body, version=self.PUBLICVERSION)
         if results['resultcode'] != common.RESULT_SUCCESS:
             raise ServerExecuteRequestError(message='list fluttercomic comics fail:%d' % results['resultcode'],
                                             code=resp.status_code,
@@ -115,7 +165,7 @@ class FlutterComicClient(GopHttpClientApi):
         return results
 
     def comic_show(self, cid, body=None):
-        resp, results = self.get(action=self.comic_path % (self.PUBLIC, cid), body=body, version=self.PRIVATEVERESION)
+        resp, results = self.get(action=self.comic_path % (self.PUBLIC, cid), body=body, version=self.PUBLICVERSION)
         if results['resultcode'] != common.RESULT_SUCCESS:
             raise ServerExecuteRequestError(message='show fluttercomic comic fail:%d' % results['resultcode'],
                                             code=resp.status_code,

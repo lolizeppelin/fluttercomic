@@ -114,7 +114,7 @@ class ComicRequest(MiddlewareContorller):
         return resultutils.results(result='create comic success', data=[dict(cid=comic.cid, name=comic.name)])
 
     def show(self, req, cid, body=None):
-        """显示漫画详细, 自动确认用户是否登陆"""
+        """显示漫画详细, 自动确认用户登陆登陆信息"""
         cid = int(cid)
         session = endpoint_session(readonly=True)
         query = model_query(session, Comic, filter=Comic.cid == cid)
@@ -122,8 +122,11 @@ class ComicRequest(MiddlewareContorller):
         if comic.status < 0:
             raise
         chapters = None
-        uid = online(req)
-        if uid:             #  已登陆,token经过校验
+        point = comic.point
+        uid, mid = online(req)
+        if mid:               # 管理员
+            point = common.MAXCHAPTERS
+        elif uid:             #  已登陆,token经过校验
             query = model_query(session, UserOwn.chapters, filter=and_(UserOwn.uid == uid, UserOwn.cid == cid))
             owns = query.one_or_none()
             if owns:
@@ -136,7 +139,7 @@ class ComicRequest(MiddlewareContorller):
                                               author=comic.author,
                                               type=comic.type,
                                               point=comic.point,
-                                              chapters=format_chapters(comic.point, comic.chapters, chapters))])
+                                              chapters=format_chapters(point, comic.chapters, chapters))])
 
     @verify(manager=True)
     def update(self, req, cid, body=None):
