@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import msgpack
 import sqlalchemy as sa
+from sqlalchemy import orm
 from sqlalchemy.ext import declarative
 
 from sqlalchemy.dialects.mysql import VARCHAR
@@ -50,7 +51,13 @@ class User(TableBase):
     gifts = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)        # 代币
     regtime = sa.Column(INTEGER(unsigned=True), nullable=False)                 # 注册时间
     status = sa.Column(TINYINT, nullable=False, default=common.ACTIVE)          # 用户状态
-    activecode = sa.Column(INTEGER(unsigned=True), nullable=True)               # 激活验证码
+    activecode = sa.Column(INTEGER(unsigned=True), nullable=True)               # 激活验证码'
+    books =  orm.relationship('UserBook',
+                              primaryjoin='User.cid == UserBook.cid',
+                              foreign_keys='UserBook.cid',backref='user', lazy='select')
+    owns = orm.relationship('UserOwn',
+                              primaryjoin='User.cid == UserOwn.cid',
+                              foreign_keys='UserOwn.cid',backref='user', lazy='select')
 
     __table_args__ = (
         sa.UniqueConstraint('name', name='name_unique'),
@@ -80,8 +87,9 @@ class Comic(TableBase):
 
 class UserBook(TableBase):
     """用户收藏书架"""
-    uid = sa.Column(INTEGER(unsigned=True), nullable=False,
-                    primary_key=True)                                           # 用户ID
+    # uid = sa.Column(INTEGER(unsigned=True),
+    uid = sa.Column(sa.ForeignKey('user.uid'),
+                    nullable=False, primary_key=True)                                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
     name = sa.Column(VARCHAR(128), nullable=False)                              # 漫画名
@@ -95,8 +103,9 @@ class UserBook(TableBase):
 
 class UserOwn(TableBase):
     """用户拥有漫画章节"""
-    uid = sa.Column(INTEGER(unsigned=True), nullable=False,
-                    primary_key=True)                                           # 用户ID
+    # uid = sa.Column(INTEGER(unsigned=True), nullable=False,
+    uid = sa.Column(sa.ForeignKey('user.uid'),
+                    nullable=False, primary_key=True)                                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
     chapters = sa.Column(BLOB, nullable=False, default=EMPTYLIST)               # 拥有章节

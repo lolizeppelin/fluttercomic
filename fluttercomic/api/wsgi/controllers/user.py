@@ -114,11 +114,18 @@ class UserRequest(MiddlewareContorller):
         uid = int(uid)
         session = endpoint_session(readonly=True)
         query = model_query(session, User, filter=User.uid == uid)
+        joins = joinedload(User.books, innerjoin=False)
+        query = query.options(joins)
         user = query.one()
         return resultutils.results(result='show user success',
                                    data=[dict(name=user.name, uid=user.uid,
                                               coins=user.coins, gitfs=user.gifts,
-                                              status=user.status, regtime=user.regtime)])
+                                              status=user.status, regtime=user.regtime,
+                                              books=[dict(cid=comic.cid, name=comic.name, author=comic.author)
+                                                     for comic in user.books],
+                                              owns=[dict(cid=own.cid, chapters=msgpack.unpackb(own.chapters))
+                                                    for own in user.owns],
+                                              )])
 
     @verify(manager=True)
     def update(self, uid, body=None):
