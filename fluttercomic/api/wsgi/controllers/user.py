@@ -88,7 +88,7 @@ class UserRequest(MiddlewareContorller):
         query = query.order_by(User.uid)
         return resultutils.results(result='show user success',
                                    data=[dict(name=user.name, uid=user.uid,
-                                              coins=user.coins, gitfs=user.gifts,
+                                              coins=user.coins, gifts=user.gifts,
                                               status=user.status, regtime=user.regtime) for user in query])
 
     def create(self, req, body=None):
@@ -119,9 +119,10 @@ class UserRequest(MiddlewareContorller):
         user = query.one()
         return resultutils.results(result='show user success',
                                    data=[dict(name=user.name, uid=user.uid,
-                                              coins=user.coins, gitfs=user.gifts,
+                                              coins=user.coins, gifts=user.gifts,
                                               status=user.status, regtime=user.regtime,
-                                              books=[dict(cid=comic.cid, name=comic.name, author=comic.author)
+                                              books=[dict(cid=comic.cid, name=comic.name,
+                                                          author=comic.author, time=comic.time)
                                                      for comic in user.books],
                                               owns=[dict(cid=own.cid, chapters=msgpack.unpackb(own.chapters))
                                                     for own in user.owns],

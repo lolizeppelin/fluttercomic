@@ -33,5 +33,5 @@ class Routers(router.RoutersBase):
                                post_action='pay')
 
             self._add_resource(mapper, controller,
-                               path='/%s/orders/gitfs/%s' % (common.NAME, platform.lower()),
+                               path='/%s/orders/gifts/%s' % (common.NAME, platform.lower()),
                                post_action='gift')
