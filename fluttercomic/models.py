@@ -88,7 +88,7 @@ class Comic(TableBase):
 class UserBook(TableBase):
     """用户收藏书架"""
     # uid = sa.Column(INTEGER(unsigned=True),
-    uid = sa.Column(sa.ForeignKey('user.uid'),
+    uid = sa.Column(sa.ForeignKey('users.uid'),
                     nullable=False, primary_key=True)                                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
@@ -104,7 +104,7 @@ class UserBook(TableBase):
 class UserOwn(TableBase):
     """用户拥有漫画章节"""
     # uid = sa.Column(INTEGER(unsigned=True), nullable=False,
-    uid = sa.Column(sa.ForeignKey('user.uid'),
+    uid = sa.Column(sa.ForeignKey('users.uid'),
                     nullable=False, primary_key=True)                                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
