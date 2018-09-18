@@ -53,11 +53,11 @@ class User(TableBase):
     status = sa.Column(TINYINT, nullable=False, default=common.ACTIVE)          # 用户状态
     activecode = sa.Column(INTEGER(unsigned=True), nullable=True)               # 激活验证码'
     books =  orm.relationship('UserBook',
-                              primaryjoin='User.cid == UserBook.cid',
-                              foreign_keys='UserBook.cid',backref='user', lazy='select')
+                              primaryjoin='User.uid == UserBook.uid',
+                              foreign_keys='UserBook.uid',backref='user', lazy='select')
     owns = orm.relationship('UserOwn',
-                              primaryjoin='User.cid == UserOwn.cid',
-                              foreign_keys='UserOwn.cid',backref='user', lazy='select')
+                              primaryjoin='User.uid == UserOwn.uid',
+                              foreign_keys='UserOwn.uid',backref='user', lazy='select')
 
     __table_args__ = (
         sa.UniqueConstraint('name', name='name_unique'),
