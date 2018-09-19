@@ -94,6 +94,8 @@ class ComicRequest(MiddlewareContorller):
                                               name=comic.name,
                                               author=comic.author,
                                               type=comic.type,
+                                              region=comic.region,
+                                              point=comic.point,
                                               last=comic.last,
                                               lastup=comic.lastup)
                                          for comic in query])

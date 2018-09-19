@@ -86,7 +86,7 @@ class UserRequest(MiddlewareContorller):
         session = endpoint_session(readonly=True)
         query = model_query(session, User)
         query = query.order_by(User.uid)
-        return resultutils.results(result='show user success',
+        return resultutils.results(result='list users success',
                                    data=[dict(name=user.name, uid=user.uid,
                                               coins=user.coins, gifts=user.gifts,
                                               status=user.status, regtime=user.regtime) for user in query])
@@ -177,8 +177,9 @@ class UserRequest(MiddlewareContorller):
                                          for own in query])
 
 
-    @verify(manager=False)
+    @verify(manager=True)
     def orders(self, req, uid, body=None):
+        """用户订单列表"""
         raise NotImplementedError('orders~~')
 
     @verify(manager=True)
@@ -205,5 +206,3 @@ class UserRequest(MiddlewareContorller):
         session.flush()
         return resultutils.results(result='build order success',
                                    data=[dict(oid=order.oid, money=money)])
-
-
