@@ -24,7 +24,10 @@ class UserPrivateRouters(router.ComposableRouter):
                                        collection_actions=['index'],
                                        member_actions=['show', 'update', 'delete'])
         collection.member.link('books', method='GET')
+        collection.member.link('owns', method='GET')
+        collection.member.link('orders', method='GET')
         collection.member.link('order', method='PUT')
+
 
 
 @singleton.singleton

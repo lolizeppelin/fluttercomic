@@ -167,6 +167,26 @@ class UserRequest(MiddlewareContorller):
                                          for book in query])
 
     @verify(manager=False)
+    def owns(self, req, uid, body=None):
+        """列出已经购买的漫画"""
+        uid = int(uid)
+        session = endpoint_session(readonly=True)
+        query = model_query(session, UserOwn, filter=UserOwn.uid == uid)
+        return resultutils.results(result='get owns comics success',
+                                   data=[dict(cid=own.cid, uid=own.uid, chapters=msgpack.unpackb(own.chapters))
+                                         for own in query])
+
+
+    @verify(manager=False)
+    def orders(self, req, uid, body=None):
+        raise NotImplementedError('orders~~')
+
+    @verify(manager=True)
+    def gitf(self, req, uid, body=None):
+        """后台发送gift接口"""
+        raise NotImplementedError('gift~~')
+
+    @verify(manager=False)
     def order(self, req, uid, body=None):
         """创建充值订单"""
         uid = int(uid)
@@ -186,7 +206,4 @@ class UserRequest(MiddlewareContorller):
         return resultutils.results(result='build order success',
                                    data=[dict(oid=order.oid, money=money)])
 
-    @verify(manager=True)
-    def gitf(self, req, uid, body=None):
-        """后台发送gift接口"""
-        raise NotImplementedError('gift~~')
+
