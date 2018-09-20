@@ -140,7 +140,10 @@ class ComicRequest(MiddlewareContorller):
                                               name=comic.name,
                                               author=comic.author,
                                               type=comic.type,
+                                              region=comic.region,
                                               point=comic.point,
+                                              last=comic.last,
+                                              lastup=comic.lastup,
                                               chapters=format_chapters(point, comic.chapters, chapters))])
 
     @verify(manager=True)
