@@ -27,10 +27,10 @@
 #tmpdir = /data/www/fluttercomic/compressed
 
 # Websocket upload process user (string value)
-#user = nginx
+#user = <None>
 
 # Websocket upload process group (string value)
-#group = nginx
+#group = <None>
 
 # Websocket upload ipaddr (string value)
 #ipaddr = <None>
