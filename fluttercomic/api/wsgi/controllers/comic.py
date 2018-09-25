@@ -253,6 +253,7 @@ class ComicRequest(MiddlewareContorller):
             else:
                 LOG.info('Call shell command convert')
                 convert.convert_cover(tmpfile, logfile=logfile)
+                LOG.info('Convert execute success')
 
 
         ws = LaunchRecverWebsocket(WEBSOCKETPROC)

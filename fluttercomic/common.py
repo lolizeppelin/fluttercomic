@@ -14,6 +14,6 @@ HIDE = 1
 
 ONECHAPTER = 10
 
-IMGEXT = set(['.jpg', '.png', '.bmp'])
+IMGEXT = set(['.jpg', '.png', '.bmp', '.jpeg'])
 
 MAXCHAPTERPIC = 100

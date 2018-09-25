@@ -19,8 +19,9 @@ import subprocess
 from fluttercomic.common import IMGEXT
 
 CONF = cfg.CONF
+logging.register_options(CONF)
 
-LOG = object()
+LOG = logging.getLogger('fluttercomic.plugin.convert')
 
 ALLOW = set([ext[1:] for ext in IMGEXT])
 
@@ -56,7 +57,7 @@ command_opts = [
                default='main.jpg',
                help='img file rename'),
     cfg.IntOpt('timeout',
-               short='t',
+               short='o',
                default=3600,
                help='max conver execute time')
 ]
@@ -162,21 +163,11 @@ def convert(path, imgfile, errors, overtime):
     POOL.add_thread(run)
 
 
-def init_conf():
-    logging.register_options(CONF)
+def main():
     CONF.register_cli_opts(command_opts)
     CONF()
     logging.setup(CONF, 'fluttercomic')
     default_logging.captureWarnings(True)
-    global LOG
-    LOG = logging.getLogger('fluttercomic.plugin.convert')
-
-
-def main():
-    # import logging
-    # logging.basicConfig(level=logging.WARN)
-
-    init_conf()
 
     overtime = int(time.time()) + CONF.timeout
     path = os.path.abspath(CONF.target)
@@ -208,3 +199,7 @@ def main():
         sys.exit(1)
 
     LOG.info('All imgfile convered')
+
+
+if __name__ == '__main__':
+    main()
