@@ -236,6 +236,7 @@ class ComicRequest(MiddlewareContorller):
         comic_path = self.comic_path(cid)
 
         logfile = '%d.conver.%d.log' % (int(time.time()), cid)
+        logfile=os.path.join(CF.logdir, logfile)
         tmpfile = 'main.%d.pic' % int(time.time())
         fileinfo.update({'overwrite': tmpfile})
         tmpfile = os.path.join(comic_path, tmpfile)
@@ -251,7 +252,7 @@ class ComicRequest(MiddlewareContorller):
                 LOG.error('comic cover file not exist')
             else:
                 LOG.info('Call shell command convert')
-                convert.convert_cover(tmpfile)
+                convert.convert_cover(tmpfile, logfile=logfile)
 
 
         ws = LaunchRecverWebsocket(WEBSOCKETPROC)
@@ -259,7 +260,7 @@ class ComicRequest(MiddlewareContorller):
             uri = ws.upload(user=CF.user, group=CF.group,
                             ipaddr=CF.ipaddr, port=port,
                             rootpath=comic_path, fileinfo=fileinfo,
-                            logfile=os.path.join(CF.logdir, logfile),
+                            logfile=logfile,
                             timeout=timeout)
         except Exception:
             WSPORTS.add(port)
