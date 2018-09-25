@@ -23,6 +23,9 @@
 # Websocket ports range in wsgi server (port_ranges value)
 #ports_range = <None>
 
+# Comic compressed files local path (string value)
+#tmpdir = /data/www/fluttercomic/compressed
+
 # The SQLAlchemy connection string to use to connect to the database. (string
 # value)
 #connection = <None>

@@ -87,17 +87,27 @@ SPIDERUPLOAD = {
     }
 
 
-@contextlib.contextmanager
-def _prepare_comic_path(comic):
-    comic_path = ComicRequest.comic_path(comic)
-    if os.path.exists(comic_path):
-        raise
-    os.makedirs(comic_path, 0o755)
-    try:
-        yield
-    except Exception:
-        shutil.rmtree(comic_path)
+class _prepare_comic_path(object):
 
+    def __init__(self):
+        self._path = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None and self._path:
+            try:
+                shutil.rmtree(self._path)
+            except (OSError, IOError):
+                LOG.error('Prepare comic error, remove %s fail')
+
+    def ok(self, cid):
+        path = ComicRequest.comic_path(cid)
+        if os.path.exists(path):
+            raise
+        os.makedirs(path, 0o755)
+        self._path = path
 
 @contextlib.contextmanager
 def _prepare_chapter_path(comic, chapter):
@@ -114,6 +124,9 @@ def _prepare_chapter_path(comic, chapter):
         yield
     except Exception:
         shutil.rmtree(chapter_path)
+
+
+
 
 
 @singleton.singleton
@@ -165,10 +178,12 @@ class ComicRequest(MiddlewareContorller):
         author = body.get('author')
         session = endpoint_session()
         comic = Comic(name=name, type=type, author=author, region=region)
-        with session.begin():
-            with _prepare_comic_path():
+        with _prepare_comic_path() as prepare:
+            with session.begin():
                 session.add(comic)
                 session.flush()
+                prepare.ok(comic.cid)
+                LOG.info('Create comic success')
         return resultutils.results(result='create comic success', data=[dict(cid=comic.cid, name=comic.name)])
 
     def show(self, req, cid, body=None):
@@ -392,7 +407,9 @@ class ComicRequest(MiddlewareContorller):
                 for filename in zlibutils.iter_files(tmpfile, common.MAXCHAPTERPIC):
                     count += 1
                     if os.path.splitext(filename)[1] not in common.IMGEXT:
-                        raise
+                        LOG.error('%s not end with img ext' % filename)
+                        self._unfinish(cid, chapter)
+                        return
                 LOG.info('extract upload file to chapter path')
                 # extract chapter file
                 zlibutils.async_extract(tmpfile, chapter_path)
