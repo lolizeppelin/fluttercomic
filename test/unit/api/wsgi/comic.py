@@ -6,6 +6,10 @@ from simpleutil.log import log as logging
 from simpleutil.config import cfg
 from simpleutil.utils import digestutils
 
+from simpleservice.plugin.exceptions import HttpRequestError
+from simpleservice.plugin.exceptions import BeforeRequestError
+from simpleservice.plugin.exceptions import AfterRequestError
+
 from goperation.api.client import ManagerClient
 
 from fluttercomic.api.client import FlutterComicClient
@@ -45,8 +49,32 @@ client = FlutterComicClient(httpclient)
 
 
 def comics_index():
-    r = client.comics_index()
-    print r
+    try:
+        r = client.comics_index()
+    except AfterRequestError as e:
+        print e.resone
+    else:
+        print r
 
 
-comics_index()
+def comics_show(cid):
+    try:
+        r = client.comic_show(cid)
+    except AfterRequestError as e:
+        print e.resone
+    else:
+        print r
+
+
+def comics_show_private():
+    try:
+        r = client.comic_show_private(cid=1, token='')
+    except AfterRequestError as e:
+        print e.resone
+    else:
+        print r
+
+
+# comics_index()
+comics_show(1)
+# comics_show_private()

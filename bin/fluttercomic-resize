@@ -1,38 +1,28 @@
 #!/usr/bin/python
 # -*- coding:utf-8 -*-
-import logging
-import sys
-import re
-from collections import namedtuple
-
 from simpleutil.config import cfg
 from simpleutil import systemutils
 from simpleutil.utils import threadgroup
 
+import logging as default_logging
+from simpleutil.log import log as logging
+
 import os
+import re
+import sys
+import time
+from collections import namedtuple
 import imghdr
 import psutil
 import subprocess
-import eventlet
+
+from fluttercomic.common import IMGEXT
 
 CONF = cfg.CONF
 
+LOG = object()
 
-command_opts = [
-    cfg.StrOpt('directory',
-               short='d',
-               required=True,
-               help='Traget directory'),
-    cfg.StrOpt('key',
-               short='key',
-               help='file secrity key'),
-    cfg.IntOpt('maxsize',
-               short='s',
-               default=300000,
-               min=100000, max=100000,
-               help='img file size'
-               )
-]
+ALLOW = set([ext[1:] for ext in IMGEXT])
 
 NUMREGEX = re.compile('\d+')
 
@@ -40,38 +30,71 @@ CONVERT = systemutils.find_executable('convert')
 
 POOL = threadgroup.ThreadGroup(thread_pool_size=min(2, psutil.cpu_count()))
 
-FILENAME = namedtuple('filename', ['name', 'keys'])
+FILENAME = namedtuple('filename', ['name', 'rename', 'keys'])
+
+command_opts = [
+    cfg.StrOpt('target',
+               short='t',
+               required=True,
+               help='Traget file or directory'),
+    cfg.StrOpt('key',
+               short='k',
+               help='file secrity key'),
+    cfg.StrOpt('size',
+               short='s',
+               default='800x600',
+               choices=['800x600', '1200x900', '1600x1200'],
+               help='file new size'),
+    cfg.IntOpt('maxsize',
+               short='m',
+               default=250000,
+               min=100000, max=1000000,
+               help='img file size'
+               ),
+    cfg.StrOpt('rename',
+               short='r',
+               default='main.jpg',
+               help='img file rename'),
+    cfg.IntOpt('timeout',
+               short='t',
+               default=3600,
+               help='max conver execute time')
+]
 
 
-def files(path):
+def getfiles(path):
     keys = 0
     _files = []
 
-    for index, fname in enumerate(os.listdir(path)):
-        if index > 500:
-            raise ValueError('to much file')
-        _keys = re.findall(NUMREGEX, fname)
-        kcount = len(_keys)
-        if not kcount:
-            raise ValueError('%s has no int value in name')
-        if keys > 0:
-            if kcount != keys:
-                raise ValueError('%s int count not as before')
-        else:
-            keys = len(_keys)
-            if keys > 5:
-                raise ValueError('int count over then 5')
-        _keys = map(int, _keys)
-        _files.append(FILENAME(fname, _keys))
+    for root, dirs, files in os.walk(".", topdown=True):
+    # for index, fname in enumerate(os.listdir(path)):
+        if dirs:
+            raise ValueError('Has folder')
+        for fname in files:
+            # 提取文件名中的数字
+            _keys = re.findall(NUMREGEX, fname)
+            kcount = len(_keys)
+            if not kcount:
+                raise ValueError('%s has no int value in name')
+            if keys > 0:
+                if kcount != keys:
+                    raise ValueError('%s int count not as before')
+            else:
+                keys = len(_keys)
+                if keys > 5:
+                    raise ValueError('int count over then 5')
+            _keys = map(int, _keys)
+            _files.append(FILENAME(fname, fname, _keys))
 
+    # 按文件名中的数字排序
+    _files.sort(key=lambda x: sum([10**(len(x.keys)-1-i)*value for i, value in enumerate(x.keys)]))
 
-    _files.sort(key=lambda x: sum([10**(len(x.keys)-1-index)*value
-                                   for index, value in enumerate(x.keys)]))
-
+    for index, _file in enumerate(_files):
+        _file.rename = '%d.jpg' % (index + 1)
     return _files
 
 
-def resize(src, maxsize):
+def quality(src, maxsize):
     filesize = os.path.getsize(src)
     if filesize > maxsize:
         persent = float(maxsize) / float(filesize)
@@ -80,58 +103,106 @@ def resize(src, maxsize):
     return 100
 
 
-def not_png(src):
+def is_pic(src):
     _type = imghdr.what(src)
-    if _type == 'jpg':
-        return False
-    return True
+    if _type in ALLOW:
+        return True
+    return False
 
 
-def build_convert_cmd(src, dst, persent):
-    command = [CONVERT, '-strip']
-    if persent < 100:
-        command.extend(['-resize', '800x600' % persent])
-        # command.extend(['-resize', '%d%%' % persent])
-        if persent < 70:
-            command.extend(['-quality', '70'])
+def build_convert_cmd(src, dst, size):
+    command = [CONVERT, '-strip', '-resize', size]
     command.extend([src, dst])
     return ' '.join(command)
 
 
-def convert(src, dst, persent):
-    command = build_convert_cmd(src, dst, persent)
+def build_quality_cmd(src, persent):
+    command = [CONVERT]
+    if persent < 70:
+        command.extend(['-quality', '70'])
+    else:
+        command.extend(['-quality', '%d' % persent])
+    command.extend([src, src])
+    return ' '.join(command)
+
+
+def convert(path, imgfile, errors, overtime):
+    size = CONF.size
+    src = os.path.join(path, imgfile.name)
+    dst = os.path.join(path, imgfile.rename)
+
+    timeout = overtime - int(time.time())
+    if timeout < 1:
+        errors.append(imgfile)
+        return
+
+    command = build_convert_cmd(src, dst, size)
 
     def run():
-        print command
+
         sub = subprocess.Popen(command, close_fds=True, executable=CONVERT)
         code = sub.wait()
         if code:
-            raise ValueError('fail!')
-        eventlet.sleep(3)
+            errors.append(imgfile)
+            raise ValueError('conver fail!')
         if src != dst:
             os.remove(src)
+        # 压缩后大小超标
+        persent = quality(src, CONF.maxsize)
+        if persent < 100:
+            # 二次压缩
+            next_command = build_quality_cmd(src, persent)
+            sub = subprocess.Popen(next_command, close_fds=True, executable=CONVERT)
+            try:
+                systemutils.subwait(sub, timeout)
+            except (systemutils.ExitBySIG, systemutils.UnExceptExit):
+                errors.append(imgfile)
+                raise ValueError('conver quality fail!')
+
     POOL.add_thread(run)
 
 
+def init_conf():
+    logging.register_options(CONF)
+    CONF.register_cli_opts(command_opts)
+    CONF()
+    logging.setup(CONF, 'fluttercomic')
+    default_logging.captureWarnings(True)
+    global LOG
+    LOG = logging.getLogger('fluttercomic.plugin.convert')
+
 
 def main():
-    logging.basicConfig(level=logging.WARN)
-    CONF.register_cli_opts(command_opts)
-    path = CONF.directory
-    for index, filename in enumerate(files(path)):
-        src = os.path.join(path, filename.name)
-        dst = os.path.join(path, '%d.jpg' % (index + 1))
-        persent = resize(src, CONF.maxsize)
-        try:
-            _not_png = not_png(src)
-        except Exception:
-            print '%s not image file' % src
-            continue
-        if _not_png or persent < 100:
-            convert(src, dst, persent)
-        else:
-            if src != dst:
-                os.rename(src, dst)
+    # import logging
+    # logging.basicConfig(level=logging.WARN)
+
+    overtime = int(time.time()) + CONF.timeout
+    path = os.path.abspath(CONF.target)
+
+    if os.path.isdir(path):
+        files = getfiles(path)
+    else:
+        path, fname = os.path.split(path)
+        files = [FILENAME(fname, CONF.rename, [])]
+
+    if path in ('', '/'):
+        LOG.error('Target path value error')
+        sys.exit(1)
+
+    for imgfile in files:
+        if not is_pic(os.path.join(path, imgfile.name)):
+            LOG.error('%s not image file' % imgfile.name)
+            sys.exit(1)
+
+    errors = []
+    for imgfile in files:
+        convert(path, imgfile, errors, overtime)
+
     POOL.wait()
 
+    if errors:
+        for imgfile in files:
+            LOG.error('convert %s to %s fail' % (imgfile.name, imgfile.rename))
+        sys.exit(1)
 
+    LOG.info('All imgfile convered')

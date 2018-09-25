@@ -37,34 +37,14 @@ class ComicPrivateRouters(router.ComposableRouter):
 
         comic_controller = controller_return_response(comic.ComicRequest(), comic.FAULT_MAP)
 
-        mapper.collection(collection_name='comics',
+        collection = mapper.collection(collection_name='comics',
                           resource_name='comic',
                           controller=comic_controller,
                           path_prefix='/%s/private' % common.NAME,
                           member_prefix='/{cid}',
                           collection_actions=['index', 'create'],
                           member_actions=['show', 'update', 'delete'])
-        # collection.member.link('chapters', method='POST')
-
-        # self._add_resource(mapper, comic_controller,
-        #                    path='/%s/private/comic/{cid}/user/{uid}' % common.NAME,
-        #                    put_action='mark')
-        # self._add_resource(mapper, comic_controller,
-        #                    path='/%s/private/comic/{cid}/user/{uid}' % common.NAME,
-        #                    delete_action='unmark')
-        # self._add_resource(mapper, comic_controller,
-        #                    path='/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
-        #                    post_action='new')
-        # self._add_resource(mapper, comic_controller,
-        #                    path='/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
-        #                    patch_action='finished')
-        #
-        # self._add_resource(mapper, comic_controller,
-        #                    path='/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
-        #                    delete_action='unfinish')
-        # self._add_resource(mapper, comic_controller,
-        #                    path='/%s/private/comic/{cid}/chapter/{chapter}/user/{uid}' % common.NAME,
-        #                    post_action='buy')
+        collection.member.link('cover', method='PUT')
 
         mapper.connect('mark_comics',
                        path='/%s/private/comic/{cid}/user/{uid}' % common.NAME,

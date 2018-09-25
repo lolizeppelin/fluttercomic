@@ -13,3 +13,7 @@ ACTIVE = 0
 HIDE = 1
 
 ONECHAPTER = 10
+
+IMGEXT = set(['.jpg', '.png', '.bmp'])
+
+MAXCHAPTERPIC = 100

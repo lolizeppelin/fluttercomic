@@ -21,6 +21,7 @@ Requires:       python >= 2.6.6
 Requires:       python < 3.0
 Requires:       python-goperation >= 1.0
 Requires:       python-goperation < 1.1
+Requires:       ImageMagick >= 6.7
 
 
 %description
@@ -62,11 +63,13 @@ install -p -D -m 0754 bin/* %{buildroot}%{_bindir}
 %{python_sitelib}/%{proj_name}/plugin/*.py
 %{python_sitelib}/%{proj_name}/plugin/*.pyc
 %{python_sitelib}/%{proj_name}/plugin/*.pyo
+%dir %{python_sitelib}/%{proj_name}/websocket
+%{python_sitelib}/%{proj_name}/websocket/*
 %{python_sitelib}/%{proj_name}/cmd
 %{python_sitelib}/%{proj_name}-%{version}-py?.?.egg-info
 %{_sbindir}/%{proj_name}-init
-%{_bindir}/%{proj_name}-upload
 %{_bindir}/%{proj_name}-resize
+%{_bindir}/%{proj_name}-websocket
 %doc README.md
 %doc doc/*
 
@@ -89,27 +92,6 @@ Flutter comic wsgi routes
 %dir %{python_sitelib}/%{proj_name}/plugin/wsgi
 %{python_sitelib}/%{proj_name}/plugin/wsgi/*
 %{_sysconfdir}/goperation/endpoints/fluttercomic.server.conf.sample
-
-
-%package agent
-Summary:        xiaochen go game rpc agent
-Group:          Development/Libraries
-Requires:       %{name} == %{version}
-Requires:       python-goperation-application >= 1.0
-Requires:       python-goperation-application < 1.1
-
-%description agent
-Goperation xiaochen go game rpc agent
-
-%files agent
-%defattr(-,root,root,-)
-%dir %{python_sitelib}/%{proj_name}/api/rpc
-%{python_sitelib}/%{proj_name}/api/rpc/*
-%dir %{python_sitelib}/%{proj_name}/websocket
-%{python_sitelib}/%{proj_name}/websocket/*
-%{_sysconfdir}/goperation/endpoints/fluttercomic.agent.conf.sample
-%{_bindir}/%{proj_name}-upload
-
 
 %changelog
 

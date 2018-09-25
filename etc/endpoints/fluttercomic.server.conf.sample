@@ -7,12 +7,21 @@
 # From fluttercomic
 #
 
-# Extend route module string (multi import string)
+# Private route module string (multi import string)
 #routes = fluttercomic.api.wsgi.routers.private
 
-# Public open route module string (multi import string)
+# Public route module string (multi import string)
 #publics = fluttercomic.api.wsgi.routers.public
 #publics = fluttercomic.plugin.wsgi.platforms.routers
+
+# Comic file base dir (string value)
+#basedir = /data/www/fluttercomic/cdn
+
+# Comic log dir (string value)
+#logdir = /data/www/fluttercomic/log
+
+# Websocket ports range in wsgi server (port_ranges value)
+#ports_range = <None>
 
 # The SQLAlchemy connection string to use to connect to the database. (string
 # value)
