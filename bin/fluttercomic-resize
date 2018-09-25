@@ -114,7 +114,7 @@ def is_pic(src):
 def build_convert_cmd(src, dst, size):
     command = [CONVERT, '-strip', '-resize', size]
     command.extend([src, dst])
-    return ' '.join(command)
+    return command
 
 
 def build_quality_cmd(src, persent):
@@ -124,7 +124,7 @@ def build_quality_cmd(src, persent):
     else:
         command.extend(['-quality', '%d' % persent])
     command.extend([src, src])
-    return ' '.join(command)
+    return command
 
 
 def convert(path, imgfile, errors, overtime):
@@ -149,16 +149,17 @@ def convert(path, imgfile, errors, overtime):
         if src != dst:
             os.remove(src)
         # 压缩后大小超标
-        persent = quality(src, CONF.maxsize)
+        persent = quality(dst, CONF.maxsize)
         if persent < 100:
             # 二次压缩
-            next_command = build_quality_cmd(src, persent)
+            next_command = build_quality_cmd(dst, persent)
             sub = subprocess.Popen(next_command, close_fds=True, executable=CONVERT)
             try:
                 systemutils.subwait(sub, timeout)
             except (systemutils.ExitBySIG, systemutils.UnExceptExit):
                 errors.append(imgfile)
                 raise ValueError('conver quality fail!')
+        systemutils.chmod(dst, 0o644)
 
     POOL.add_thread(run)
 
