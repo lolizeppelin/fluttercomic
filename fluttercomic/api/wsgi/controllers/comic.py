@@ -109,6 +109,7 @@ class _prepare_comic_path(object):
         os.makedirs(path, 0o755)
         self._path = path
 
+
 @contextlib.contextmanager
 def _prepare_chapter_path(comic, chapter):
     comic_path = ComicRequest.comic_path(comic)
@@ -124,9 +125,6 @@ def _prepare_chapter_path(comic, chapter):
         yield
     except Exception:
         shutil.rmtree(chapter_path)
-
-
-
 
 
 @singleton.singleton
@@ -263,7 +261,6 @@ class ComicRequest(MiddlewareContorller):
                             rootpath=comic_path, fileinfo=fileinfo,
                             logfile=os.path.join(CF.logdir, logfile),
                             timeout=timeout)
-            self.manager.websockets.setdefault(ws.pid, WEBSOCKETPROC)
         except Exception:
             WSPORTS.add(port)
             return resultutils.results(result='upload cover get websocket uri fail',

@@ -43,7 +43,7 @@ install -p -D -m 0644 etc/endpoints/*.conf.sample %{buildroot}%{_sysconfdir}/gop
 install -d %{buildroot}%{_sbindir}
 install -d %{buildroot}%{_bindir}
 install -p -D -m 0754 sbin/* %{buildroot}%{_sbindir}
-install -p -D -m 0754 bin/* %{buildroot}%{_bindir}
+install -p -D -m 0755 bin/* %{buildroot}%{_bindir}
 
 
 %clean
