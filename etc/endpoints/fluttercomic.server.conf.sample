@@ -26,6 +26,15 @@
 # Comic compressed files local path (string value)
 #tmpdir = /data/www/fluttercomic/compressed
 
+# Websocket upload process user (string value)
+#user = nginx
+
+# Websocket upload process group (string value)
+#group = nginx
+
+# Websocket upload ipaddr (string value)
+#ipaddr = <None>
+
 # The SQLAlchemy connection string to use to connect to the database. (string
 # value)
 #connection = <None>

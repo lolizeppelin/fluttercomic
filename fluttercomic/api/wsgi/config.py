@@ -17,6 +17,15 @@ comic_opts = [
     cfg.StrOpt('tmpdir',
                default='/data/www/fluttercomic/compressed',
                help='Comic compressed files local path'),
+    cfg.StrOpt('user',
+               default='nginx',
+               help='Websocket upload process user'),
+    cfg.StrOpt('group',
+               default='nginx',
+               help='Websocket upload process group'),
+    cfg.StrOpt('ipaddr',
+               help='Websocket upload ipaddr'
+               ),
 ]
 
 

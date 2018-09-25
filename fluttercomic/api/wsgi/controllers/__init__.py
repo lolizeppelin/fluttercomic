@@ -11,4 +11,4 @@ register_opts(CONF.find_group(common.NAME))
 
 conf = CONF[common.NAME]
 
-WSPORTS = attributes.validators['type:ports_range_list'](conf.ports_range) if conf.ports_range else []
+WSPORTS = set(attributes.validators['type:ports_range_list'](conf.ports_range) if conf.ports_range else [])

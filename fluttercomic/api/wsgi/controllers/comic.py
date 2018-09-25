@@ -230,7 +230,7 @@ class ComicRequest(MiddlewareContorller):
     @verify(manager=True)
     def cover(self, req, cid, body=None):
         """上传封面"""
-
+        cid = int(cid)
         timeout = body.get('timeout')
         fileinfo = body.get('fileinfo')
         jsonutils.schema_validate(fileinfo, FILEINFOSCHEMA)
@@ -238,8 +238,6 @@ class ComicRequest(MiddlewareContorller):
         comic_path = self.comic_path(cid)
 
         logfile = '%d.conver.%d.log' % (int(time.time()), cid)
-        self._log_path()
-
         tmpfile = 'main.%d.pic' % int(time.time())
         fileinfo.update({'overwrite': tmpfile})
         tmpfile = os.path.join(comic_path, tmpfile)
