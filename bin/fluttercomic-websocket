@@ -16,6 +16,7 @@ def main():
     # clean stderr logging
     for hd in default_logging.root.handlers:
         default_logging.root.removeHandler(hd)
+    default_logging.captureWarnings(True)
 
     CONF.register_cli_opts(websocket_opts)
     CONF.register_cli_opts(recver_opts)

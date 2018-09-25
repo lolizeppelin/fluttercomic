@@ -176,6 +176,8 @@ def main():
     # import logging
     # logging.basicConfig(level=logging.WARN)
 
+    init_conf()
+
     overtime = int(time.time()) + CONF.timeout
     path = os.path.abspath(CONF.target)
 
