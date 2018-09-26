@@ -346,7 +346,7 @@ class ComicRequest(MiddlewareContorller):
         cid = int(cid)
         uid = int(uid)
         session = endpoint_session()
-        if model_count_with_key(session, User, filter=UserBook.uid == uid) >= common.MAXBOOKS:
+        if model_count_with_key(session, UserBook, filter=UserBook.uid == uid) >= common.MAXBOOKS:
             raise
         query = model_query(session, Comic.name, filter=Comic.cid == cid)
         comic = query.one()
@@ -364,7 +364,7 @@ class ComicRequest(MiddlewareContorller):
         cid = int(cid)
         uid = int(uid)
         session = endpoint_session()
-        query = model_query(session, UserBook, filter=and_(User.uid == uid, UserBook.cid == cid))
+        query = model_query(session, UserBook, filter=and_(UserBook.uid == uid, UserBook.cid == cid))
         book = query.one_or_none()
         if book:
             query.delete(book)
@@ -429,7 +429,7 @@ class ComicRequest(MiddlewareContorller):
 
 
         session = endpoint_session()
-        query = session.query(User).filter(Comic.cid == cid).with_for_update()
+        query = session.query(Comic).filter(Comic.cid == cid).with_for_update()
 
         with session.begin():
             comic = query.one()
@@ -476,7 +476,7 @@ class ComicRequest(MiddlewareContorller):
         max = body.get('max')           # 章节最大页数
         key = body.get('key')           # 加密key
         session = endpoint_session()
-        query = session.query(User).filter(Comic.cid == cid).with_for_update()
+        query = session.query(Comic).filter(Comic.cid == cid).with_for_update()
         with session.begin():
             comic = query.one()
             last = comic.last
@@ -495,7 +495,7 @@ class ComicRequest(MiddlewareContorller):
     def _unfinish(self, cid, chapter):
         """章节上传完成 失败, 通知还原"""
         session = endpoint_session()
-        query = session.query(User).filter(Comic.cid == cid).with_for_update()
+        query = session.query(Comic).filter(Comic.cid == cid).with_for_update()
         with session.begin():
             comic = query.one()
             last = comic.last
