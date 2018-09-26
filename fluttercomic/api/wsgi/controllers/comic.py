@@ -48,6 +48,7 @@ from fluttercomic.api.wsgi.utils import format_chapters
 from fluttercomic.api.wsgi.controllers import WSPORTS
 
 from fluttercomic.plugin import convert
+from fluttercomic.api import exceptions
 
 LOG = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ class _prepare_comic_path(object):
     def ok(self, cid):
         path = ComicRequest.comic_path(cid)
         if os.path.exists(path):
-            raise
+            raise exceptions.ComicFolderError('Comic path alreday exist')
         os.makedirs(path, 0o755)
         self._path = path
 
@@ -134,9 +135,9 @@ def _prepare_chapter_path(comic, chapter):
     chapter_path = ComicRequest.chapter_path(comic, chapter)
 
     if not os.path.exists(comic_path):
-        raise
+        raise exceptions.ComicFolderError('Comic path not exist')
     if not os.path.exists(chapter_path):
-        raise
+        raise exceptions.ComicFolderError('Chapter path alreday exist')
 
     os.makedirs(chapter_path, 0o755)
     try:
@@ -199,7 +200,7 @@ class ComicRequest(MiddlewareContorller):
         query = model_query(session, Comic, filter=Comic.cid == cid)
         comic = query.one()
         if comic.status < 0:
-            raise
+            raise exceptions.ComicError('Comic status error')
         chapters = None
         point = comic.point
         uid, mid = online(req)
@@ -213,7 +214,7 @@ class ComicRequest(MiddlewareContorller):
             if owns:
                 chapters = owns.chapters
         elif comic.status == common.HIDE:
-            raise
+            raise exceptions.ComicError('Comic status error')
         return resultutils.results(result='show comic success',
                                    data=[dict(cid=comic.cid,
                                               name=comic.name,
@@ -249,7 +250,7 @@ class ComicRequest(MiddlewareContorller):
         fileinfo.update({'overwrite': tmpfile})
         tmpfile = os.path.join(comic_path, tmpfile)
         if os.path.exists(tmpfile):
-            raise
+            raise exceptions.ComicUploadError('Upload cover file fail')
 
         port = max(WSPORTS)
         WSPORTS.remove(port)
@@ -295,15 +296,15 @@ class ComicRequest(MiddlewareContorller):
         comic = query.one()
         with session.begin():
             if comic.point >= chapter:
-                raise
+                raise InvalidArgument('Do not buy free chaper')
             if comic.last < chapter:
-                raise
+                raise InvalidArgument('Do not buy not exist chaper')
             user = uquery.one()
 
             coins = coin = user.coins
             gifts = gift = user.gifts
             if coin + gift < common.ONECHAPTER:
-                raise
+                raise InvalidArgument('Not enough coin')
             # coins 不足
             if coin < common.ONECHAPTER:
                 gift = common.ONECHAPTER - coin
@@ -347,7 +348,7 @@ class ComicRequest(MiddlewareContorller):
         uid = int(uid)
         session = endpoint_session()
         if model_count_with_key(session, UserBook, filter=UserBook.uid == uid) >= common.MAXBOOKS:
-            raise
+            raise InvalidArgument('Mark over 50')
         query = model_query(session, Comic.name, filter=Comic.cid == cid)
         comic = query.one()
         try:
@@ -392,7 +393,7 @@ class ComicRequest(MiddlewareContorller):
             fileinfo.update({'overwrite': tmpfile})
             tmpfile = os.path.join(comic_path, tmpfile)
             if os.path.exists(tmpfile):
-                raise
+                raise exceptions.ComicUploadError('Upload chapter file fail')
         else:
             raise NotImplementedError
 
@@ -426,23 +427,21 @@ class ComicRequest(MiddlewareContorller):
                 else:
                     self._finished(cid, chapter, dict(key=key, max=count))
 
-
-
         session = endpoint_session()
         query = session.query(Comic).filter(Comic.cid == cid).with_for_update()
 
-        with session.begin():
-            comic = query.one()
-            last = comic.last
-            if (last +1) != chapter:
-                raise
+        with _prepare_chapter_path(cid, chapter):
+            with session.begin():
+                comic = query.one()
+                last = comic.last
+                if (last +1) != chapter:
+                    raise InvalidArgument('New chapter value  error')
 
-            chapters = msgpack.unpackb(comic.chapters)
-            if len(chapters) != comic.last:
-                LOG.error('Comic chapters is uploading')
-                raise
+                chapters = msgpack.unpackb(comic.chapters)
+                if len(chapters) != comic.last:
+                    LOG.error('Comic chapter is uploading')
+                    raise InvalidArgument('Comic chapter is uploading')
 
-            with _prepare_chapter_path(comic.cid, chapter):
                 comic.last = chapter
                 session.flush()
                 # 创建资源url加密key
@@ -481,11 +480,11 @@ class ComicRequest(MiddlewareContorller):
             comic = query.one()
             last = comic.last
             if last != chapter:
-                raise
+                raise InvalidArgument('Finish chapter value error')
             chapters = msgpack.unpackb(comic.chapters)
             if len(chapters) != (last - 1):
-                LOG.error('Comic chapters is not uploading')
-                raise
+                LOG.error('Comic chapter is not uploading, do not finish it')
+                raise InvalidArgument('Finish chapter value error')
             chapters.append([max, key])
             comic.lastup = int(time.time())
             comic.chapters = msgpack.packb(chapters)
@@ -500,11 +499,11 @@ class ComicRequest(MiddlewareContorller):
             comic = query.one()
             last = comic.last
             if last != chapter:
-                raise
+                raise InvalidArgument('Unfinish chapter value error')
             chapters = msgpack.unpackb(comic.chapters)
             if len(chapters) != (last - 1):
                 LOG.error('Comic chapters is not uploading')
-                raise
+                raise InvalidArgument('Unfinish chapter value error')
             comic.last = last - 1
             session.flush()
         chapter_path = self.chapter_path(cid, chapter)
