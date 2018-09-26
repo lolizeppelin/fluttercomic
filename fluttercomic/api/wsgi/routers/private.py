@@ -47,32 +47,32 @@ class ComicPrivateRouters(router.ComposableRouter):
         collection.member.link('cover', method='PUT')
 
         mapper.connect('mark_comics',
-                       path='/%s/private/comic/{cid}/user/{uid}' % common.NAME,
+                       '/%s/private/comic/{cid}/user/{uid}' % common.NAME,
                        controller=comic_controller, action='mark',
                        conditions=dict(method=['PUT']))
 
         mapper.connect('unmark_comics',
-                       path='/%s/private/comic/{cid}/user/{uid}' % common.NAME,
+                       '/%s/private/comic/{cid}/user/{uid}' % common.NAME,
                        controller=comic_controller, action='unmark',
                        conditions=dict(method=['DELETE']))
 
         mapper.connect('buy_chapters',
-                       path='/%s/private/comic/{cid}/chapter/{chapter}/user/{uid}' % common.NAME,
+                       '/%s/private/comic/{cid}/chapter/{chapter}/user/{uid}' % common.NAME,
                        controller=comic_controller, action='buy',
                        conditions=dict(method=['POST']))
 
         mapper.connect('new_chapters',
-                       path='/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
+                       '/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
                        controller=comic_controller, action='new',
                        conditions=dict(method=['POST']))
 
         mapper.connect('new_chapters',
-                       path='/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
+                       '/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
                        controller=comic_controller, action='finished',
                        conditions=dict(method=['PATCH']))
 
         mapper.connect('new_chapters',
-                       path='/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
+                       '/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
                        controller=comic_controller, action='unfinish',
                        conditions=dict(method=['DELETE']))
 

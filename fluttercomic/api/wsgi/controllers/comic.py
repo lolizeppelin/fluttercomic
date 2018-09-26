@@ -63,6 +63,16 @@ FAULT_MAP = {
 }
 
 
+COVERUPLOAD = {
+    'type': 'object',
+    'required': ['fileinfo'],
+    'properties':
+        {
+            'timeout': {'type': 'integer', 'minimum': 5, 'maximun': 30},
+            'fileinfo': FILEINFOSCHEMA,
+         }
+}
+
 WEBSOCKETUPLOAD = {
         'type': 'object',
         'required': ['type', 'fileinfo'],
@@ -72,7 +82,6 @@ WEBSOCKETUPLOAD = {
                 'fileinfo': FILEINFOSCHEMA,
              }
     }
-
 
 SPIDERUPLOAD = {
         'type': 'object',
@@ -86,6 +95,15 @@ SPIDERUPLOAD = {
              }
     }
 
+NEWCHAPTER = {
+    'type': 'object',
+    'required': ['impl', 'timeout'],
+    'properties':
+        {
+             'impl': {'oneOf': [WEBSOCKETUPLOAD, SPIDERUPLOAD]},
+             'timeout': {'type': 'integer', 'minimum': 30, 'maximun': 1200},                   # pagen number
+         }
+}
 
 class _prepare_comic_path(object):
 
@@ -131,16 +149,6 @@ def _prepare_chapter_path(comic, chapter):
 class ComicRequest(MiddlewareContorller):
 
     ADMINAPI = False
-
-    NEWCHAPTER = {
-        'type': 'object',
-        'required': ['impl', 'timeout'],
-        'properties':
-            {
-                 'impl': {'oneOf': [WEBSOCKETUPLOAD, SPIDERUPLOAD]},
-                 'timeout': {'type': 'integer', 'minimum': 30, 'maximun': 1200},                   # pagen number
-             }
-    }
 
     @staticmethod
     def comic_path(comic):
@@ -229,9 +237,9 @@ class ComicRequest(MiddlewareContorller):
     def cover(self, req, cid, body=None):
         """上传封面"""
         cid = int(cid)
-        timeout = body.get('timeout')
+        jsonutils.schema_validate(body, COVERUPLOAD)
+        timeout = body.get('timeout', 20)
         fileinfo = body.get('fileinfo')
-        jsonutils.schema_validate(fileinfo, FILEINFOSCHEMA)
 
         comic_path = self.comic_path(cid)
 
@@ -369,7 +377,7 @@ class ComicRequest(MiddlewareContorller):
         cid = int(cid)
         chapter = int(chapter)
         body = body or {}
-        jsonutils.schema_validate(body, self.NEWCHAPTER)
+        jsonutils.schema_validate(body, NEWCHAPTER)
 
         impl = body.get('impl')
         timeout = body.get('timeout')
