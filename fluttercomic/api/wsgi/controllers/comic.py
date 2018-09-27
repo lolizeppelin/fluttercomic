@@ -261,7 +261,7 @@ class ComicRequest(MiddlewareContorller):
                 LOG.error('comic cover file not exist')
             else:
                 LOG.info('Call shell command convert')
-                convert.convert_cover(tmpfile, logfile=logfile)
+                convert.convert_cover(cid, tmpfile, logfile=logfile)
                 LOG.info('Convert execute success')
 
 
@@ -431,14 +431,16 @@ class ComicRequest(MiddlewareContorller):
             zlibutils.async_extract(tmpfile, chapter_path)
             LOG.info('convert chapter path')
             try:
-                convert.convert_chapter(tmpfile, chapter_path, '%d%s' % (cid, key))
+                convert.convert_chapter(cid=cid, src=tmpfile, dst=chapter_path,
+                                        key='%d%s' % (cid, key), logfile=logfile)
             except Exception:
-                if LOG.isEnableFor(logging.DEBUG):
+                if LOG.isEnabledFor(logging.DEBUG):
                     LOG.exception('convert error')
                 else:
                     LOG.error('convert chapter path fail')
                 self._unfinish(cid, chapter)
             else:
+                LOG.info('convert chapter path finish')
                 self._finished(cid, chapter, dict(key=key, max=count))
 
         session = endpoint_session()

@@ -38,6 +38,10 @@ command_opts = [
                short='t',
                required=True,
                help='Traget file or directory'),
+    cfg.IntOpt('comic',
+               min=1,
+               short='c',
+               help='Comic id'),
     cfg.StrOpt('key',
                short='k',
                help='file secrity key'),
@@ -64,35 +68,39 @@ command_opts = [
 
 
 def getfiles(path):
-    keys = 0
+    # keys = 0
     _files = []
 
-    for root, dirs, files in os.walk(".", topdown=True):
+    if not CONF.comic:
+        raise ValueError('Comic id is None')
+
+    for root, dirs, files in os.walk(path, topdown=True):
     # for index, fname in enumerate(os.listdir(path)):
         if dirs:
             raise ValueError('Has folder')
         for fname in files:
             # 提取文件名中的数字
             _keys = re.findall(NUMREGEX, fname)
-            kcount = len(_keys)
-            if not kcount:
-                raise ValueError('%s has no int value in name')
-            if keys > 0:
-                if kcount != keys:
-                    raise ValueError('%s int count not as before')
-            else:
-                keys = len(_keys)
-                if keys > 5:
-                    raise ValueError('int count over then 5')
+            # kcount = len(_keys)
+            # if not kcount:
+            #     raise ValueError('%s has no int value in name')
+            # if keys > 0:
+            #     if kcount != keys:
+            #         raise ValueError('%s int count not as before')
+            # else:
+            #     keys = len(_keys)
+            #     if keys > 5:
+            #         raise ValueError('int count over then 5')
             _keys = map(int, _keys)
             _files.append(FILENAME(fname, fname, _keys))
 
     # 按文件名中的数字排序
     _files.sort(key=lambda x: sum([10**(len(x.keys)-1-i)*value for i, value in enumerate(x.keys)]))
 
-    for index, _file in enumerate(_files):
-        _file.rename = '%d.jpg' % (index + 1)
-    return _files
+    # for index, _file in enumerate(_files):
+    #     _file.rename = '%d.jpg' % (index + 1)
+    # return _files
+    return [FILENAME(_file.name, '%d.jpg'% (index+1), []) for index, _file in enumerate(_files)]
 
 
 def quality(src, maxsize):
