@@ -153,6 +153,7 @@ def convert(path, imgfile, errors, overtime):
         persent = quality(dst, CONF.maxsize)
         if persent < 100:
             # 二次压缩
+            LOG.info('quality file %s' % dst)
             next_command = build_quality_cmd(dst, persent)
             sub = subprocess.Popen(next_command, close_fds=True, executable=CONVERT)
             try:
@@ -175,8 +176,10 @@ def main():
     path = os.path.abspath(CONF.target)
 
     if os.path.isdir(path):
+        LOG.info('Convert path %s' % CONF.target)
         files = getfiles(path)
     else:
+        LOG.info('Convert file %s' % CONF.target)
         path, fname = os.path.split(path)
         files = [FILENAME(fname, CONF.rename, [])]
 

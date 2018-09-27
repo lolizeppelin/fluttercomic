@@ -414,7 +414,7 @@ class ComicRequest(MiddlewareContorller):
                 LOG.info('Check name from upload file')
                 for filename in zlibutils.iter_files(tmpfile):
                     count += 1
-                    if count > common.MAXCHAPTERS:
+                    if count > common.MAXCHAPTERPIC:
                         raise ValueError('Too many file in one chapter')
                     ext = os.path.splitext(filename)[1]
                     if ext.lower() not in common.IMGEXT:
@@ -433,7 +433,7 @@ class ComicRequest(MiddlewareContorller):
             LOG.info('extract upload file to chapter path')
             # extract chapter file
             try:
-                zlibutils.async_extract(tmpfile, chapter_path)
+                zlibutils.async_extract(tmpfile, chapter_path).wait()
             finally:
                 os.remove(tmpfile)
             LOG.info('convert chapter path')
