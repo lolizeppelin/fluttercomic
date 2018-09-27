@@ -38,10 +38,6 @@ command_opts = [
                short='t',
                required=True,
                help='Traget file or directory'),
-    cfg.IntOpt('comic',
-               min=1,
-               short='c',
-               help='Comic id'),
     cfg.StrOpt('key',
                short='k',
                help='file secrity key'),
@@ -70,9 +66,6 @@ command_opts = [
 def getfiles(path):
     # keys = 0
     _files = []
-
-    if not CONF.comic:
-        raise ValueError('Comic id is None')
 
     for root, dirs, files in os.walk(path, topdown=True):
     # for index, fname in enumerate(os.listdir(path)):

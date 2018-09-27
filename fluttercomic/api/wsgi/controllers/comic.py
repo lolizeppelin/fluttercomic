@@ -261,7 +261,7 @@ class ComicRequest(MiddlewareContorller):
                 LOG.error('comic cover file not exist')
             else:
                 LOG.info('Call shell command convert')
-                convert.convert_cover(cid, tmpfile, logfile=logfile)
+                convert.convert_cover(tmpfile, logfile=logfile)
                 LOG.info('Convert execute success')
 
 
@@ -397,6 +397,9 @@ class ComicRequest(MiddlewareContorller):
         else:
             raise NotImplementedError
 
+
+        # 创建资源url加密key
+        key = ''.join(random.sample(string.lowercase, 6))
         port = max(WSPORTS)
         WSPORTS.remove(port)
 
@@ -430,9 +433,10 @@ class ComicRequest(MiddlewareContorller):
             # extract chapter file
             zlibutils.async_extract(tmpfile, chapter_path)
             LOG.info('convert chapter path')
+            _key ='%d%s' % (cid, key)
             try:
-                convert.convert_chapter(cid=cid, src=tmpfile, dst=chapter_path,
-                                        key='%d%s' % (cid, key), logfile=logfile)
+                convert.convert_chapter(src=tmpfile, dst=chapter_path,
+                                        key=_key, logfile=logfile)
             except Exception:
                 if LOG.isEnabledFor(logging.DEBUG):
                     LOG.exception('convert error')
@@ -460,8 +464,6 @@ class ComicRequest(MiddlewareContorller):
 
                 comic.last = chapter
                 session.flush()
-                # 创建资源url加密key
-                key = ''.join(random.sample(string.lowercase, 6))
                 # 注意: 下面的操作会导致漫画被锁定较长时间,
                 if impl['type'] == 'websocket':
                     ws = LaunchRecverWebsocket(WEBSOCKETPROC)
@@ -480,6 +482,7 @@ class ComicRequest(MiddlewareContorller):
                         ws.asyncwait(exitfunc=_exitfunc)
                         worker = uri
                 else:
+                    WSPORTS.add(port)
                     worker = None #  asyncrequest.to_dict()
                     raise NotImplementedError
 
