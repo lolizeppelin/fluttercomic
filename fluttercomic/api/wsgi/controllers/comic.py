@@ -383,7 +383,8 @@ class ComicRequest(MiddlewareContorller):
         impl = body.get('impl')
         timeout = body.get('timeout')
 
-        logfile = '%d.chapter.%d.%d.log' % (int(time.time()), cid, chapter)
+        logfile = os.path.join(CF.logdir, '%d.chapter.%d.%d.log' %
+                               (int(time.time()), cid, chapter))
         comic_path = self.comic_path(cid)
         chapter_path = self.chapter_path(cid, chapter)
 
@@ -431,7 +432,10 @@ class ComicRequest(MiddlewareContorller):
 
             LOG.info('extract upload file to chapter path')
             # extract chapter file
-            zlibutils.async_extract(tmpfile, chapter_path)
+            try:
+                zlibutils.async_extract(tmpfile, chapter_path)
+            finally:
+                os.remove(tmpfile)
             LOG.info('convert chapter path')
             _key ='%d%s' % (cid, key)
             try:
@@ -471,7 +475,7 @@ class ComicRequest(MiddlewareContorller):
                         uri = ws.upload(user=CF.user, group=CF.group,
                                         ipaddr=CF.ipaddr, port=port,
                                         rootpath=comic_path, fileinfo=impl['fileinfo'],
-                                        logfile=os.path.join(CF.logdir, logfile),
+                                        logfile=logfile,
                                         timeout=timeout)
                     except Exception:
                         WSPORTS.add(port)
