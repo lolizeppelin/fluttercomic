@@ -401,45 +401,41 @@ class ComicRequest(MiddlewareContorller):
         WSPORTS.remove(port)
 
         def _exitfunc():
-
             WSPORTS.add(port)
-            if not os.path.exists(tmpfile):
-                LOG.error('comic chapter file not exist')
-                self._unfinish(cid, chapter)
-            else:
+            # checket chapter file
+            count = 0
+            try:
+                if not os.path.exists(tmpfile):
+                    raise ValueError('Comic chapter file not exist')
                 LOG.info('Check name from upload file')
-                # checket chapter file
-                count = 0
                 for filename in zlibutils.iter_files(tmpfile):
                     count += 1
                     if count > common.MAXCHAPTERS:
-                        try:
-                            os.remove(tmpfile)
-                        except Exception:
-                            LOG.error('Too many file in one chapter')
-                        finally:
-                            self._unfinish(cid, chapter)
-                            return
+                        raise ValueError('Too many file in one chapter')
                     ext = os.path.splitext(filename)[1]
                     if ext.lower() not in common.IMGEXT:
-                        LOG.error('%s not end with img ext' % filename)
-                        try:
-                            os.remove(tmpfile)
-                        except Exception:
-                            LOG.error('remove tmp upload file %s fail' % tmpfile)
-                        finally:
-                            self._unfinish(cid, chapter)
-                            return
-                LOG.info('extract upload file to chapter path')
-                # extract chapter file
-                zlibutils.async_extract(tmpfile, chapter_path)
-                LOG.info('convert chapter path')
+                        raise ValueError('%s not end with img ext' % filename)
+            except Exception as e:
+                LOG.error(e.message)
                 try:
-                    convert.convert_chapter(tmpfile, chapter_path, '%d%s' % (cid, key))
-                except Exception:
+                    if os.path.exists(tmpfile):
+                        os.remove(tmpfile)
+                except (OSError, IOError):
+                    LOG.error('Revmove uploade file %s fail' % tmpfile)
+                finally:
                     self._unfinish(cid, chapter)
-                else:
-                    self._finished(cid, chapter, dict(key=key, max=count))
+                    return
+
+            LOG.info('extract upload file to chapter path')
+            # extract chapter file
+            zlibutils.async_extract(tmpfile, chapter_path)
+            LOG.info('convert chapter path')
+            try:
+                convert.convert_chapter(tmpfile, chapter_path, '%d%s' % (cid, key))
+            except Exception:
+                self._unfinish(cid, chapter)
+            else:
+                self._finished(cid, chapter, dict(key=key, max=count))
 
         session = endpoint_session()
         query = session.query(Comic).filter(Comic.cid == cid).with_for_update()
