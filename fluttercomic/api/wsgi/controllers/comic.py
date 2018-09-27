@@ -433,6 +433,10 @@ class ComicRequest(MiddlewareContorller):
             try:
                 convert.convert_chapter(tmpfile, chapter_path, '%d%s' % (cid, key))
             except Exception:
+                if LOG.isEnableFor(logging.DEBUG):
+                    LOG.exception('convert error')
+                else:
+                    LOG.error('convert chapter path fail')
                 self._unfinish(cid, chapter)
             else:
                 self._finished(cid, chapter, dict(key=key, max=count))
