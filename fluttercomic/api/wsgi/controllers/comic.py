@@ -136,7 +136,7 @@ def _prepare_chapter_path(comic, chapter):
 
     if not os.path.exists(comic_path):
         raise exceptions.ComicFolderError('Comic path not exist')
-    if not os.path.exists(chapter_path):
+    if os.path.exists(chapter_path):
         raise exceptions.ComicFolderError('Chapter path alreday exist')
 
     os.makedirs(chapter_path, 0o755)
@@ -412,16 +412,22 @@ class ComicRequest(MiddlewareContorller):
                 count = 0
                 for filename in zlibutils.iter_files(tmpfile, common.MAXCHAPTERPIC):
                     count += 1
-                    if os.path.splitext(filename)[1] not in common.IMGEXT:
+                    ext = os.path.splitext(filename)[1]
+                    if ext.lower() not in common.IMGEXT:
                         LOG.error('%s not end with img ext' % filename)
-                        self._unfinish(cid, chapter)
-                        return
+                        try:
+                            os.remove(tmpfile)
+                        except Exception:
+                            LOG.error('remove tmp upload file %s fail' % tmpfile)
+                        finally:
+                            self._unfinish(cid, chapter)
+                            return
                 LOG.info('extract upload file to chapter path')
                 # extract chapter file
                 zlibutils.async_extract(tmpfile, chapter_path)
                 LOG.info('convert chapter path')
                 try:
-                    count = convert.convert_chapter(tmpfile, chapter_path, '%d%s' % (cid, key))
+                    convert.convert_chapter(tmpfile, chapter_path, '%d%s' % (cid, key))
                 except Exception:
                     self._unfinish(cid, chapter)
                 else:
@@ -447,7 +453,7 @@ class ComicRequest(MiddlewareContorller):
                 # 创建资源url加密key
                 key = ''.join(random.sample(string.lowercase, 6))
                 # 注意: 下面的操作会导致漫画被锁定较长时间,
-                if impl['type'] == 'local':
+                if impl['type'] == 'websocket':
                     ws = LaunchRecverWebsocket(WEBSOCKETPROC)
                     try:
                         uri = ws.upload(user=CF.user, group=CF.group,
