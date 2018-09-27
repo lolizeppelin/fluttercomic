@@ -16,4 +16,4 @@ ONECHAPTER = 10
 
 IMGEXT = set(['.jpg', '.png', '.bmp', '.jpeg'])
 
-MAXCHAPTERPIC = 100
+MAXCHAPTERPIC = 200

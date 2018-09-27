@@ -410,8 +410,16 @@ class ComicRequest(MiddlewareContorller):
                 LOG.info('Check name from upload file')
                 # checket chapter file
                 count = 0
-                for filename in zlibutils.iter_files(tmpfile, common.MAXCHAPTERPIC):
+                for filename in zlibutils.iter_files(tmpfile):
                     count += 1
+                    if count > common.MAXCHAPTERS:
+                        try:
+                            os.remove(tmpfile)
+                        except Exception:
+                            LOG.error('Too many file in one chapter')
+                        finally:
+                            self._unfinish(cid, chapter)
+                            return
                     ext = os.path.splitext(filename)[1]
                     if ext.lower() not in common.IMGEXT:
                         LOG.error('%s not end with img ext' % filename)
