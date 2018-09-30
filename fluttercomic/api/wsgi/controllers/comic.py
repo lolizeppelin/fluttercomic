@@ -5,7 +5,7 @@ import random
 import string
 import webob.exc
 import msgpack
-
+import eventlet
 
 import contextlib
 import shutil
@@ -63,7 +63,6 @@ FAULT_MAP = {
     MultipleResultsFound: webob.exc.HTTPInternalServerError
 }
 
-
 COVERUPLOAD = {
     'type': 'object',
     'required': ['fileinfo'],
@@ -84,6 +83,16 @@ WEBSOCKETUPLOAD = {
              }
     }
 
+LOCAL = {
+        'type': 'object',
+        'required': ['type', 'path'],
+        'properties':
+            {
+                'type': {'type': 'string', 'enum': ['websocket']},
+                'path': {'type': 'string', 'minimum': 2},
+             }
+    }
+
 SPIDERUPLOAD = {
         'type': 'object',
         'required': ['type', 'url'],
@@ -101,7 +110,7 @@ NEWCHAPTER = {
     'required': ['impl', 'timeout'],
     'properties':
         {
-             'impl': {'oneOf': [WEBSOCKETUPLOAD, SPIDERUPLOAD]},
+             'impl': {'oneOf': [WEBSOCKETUPLOAD, SPIDERUPLOAD, LOCAL]},
              'timeout': {'type': 'integer', 'minimum': 30, 'maximun': 1200},                   # pagen number
          }
 }
@@ -151,13 +160,77 @@ class ComicRequest(MiddlewareContorller):
 
     ADMINAPI = False
 
+    cdndir = os.path.join(CF.basedir, 'cdn')
+    logdir  = os.path.join(CF.basedir, 'log')
+    tmpdir = os.path.join(CF.basedir, 'tmp')
+
+    def __init__(self):
+
+        if not os.path.exists(self.cdndir):
+            os.makedirs(self.cdndir, 0o755)
+        if not os.path.exists(self.logdir):
+            os.makedirs(self.logdir, 0o755)
+        if not os.path.exists(self.tmpdir):
+            os.makedirs(self.tmpdir, 0o755)
+
     @staticmethod
     def comic_path(comic):
-        return os.path.join(CF.basedir, str(comic))
+        return os.path.join(ComicRequest.cdndir, str(comic))
 
     @staticmethod
     def chapter_path(comic, chapter):
-        return os.path.join(CF.basedir, str(comic), str(chapter))
+        return os.path.join(ComicRequest.cdndir, str(chapter))
+
+    @staticmethod
+    def _convert_new_chapter_from_dir(src, dst):
+        count = 0
+        for root, dirs, files in os.walk(src, topdown=True):
+            for dir in dirs:
+                LOG.error('folder %s in local new chaper path' % dir)
+                raise ValueError('folder %s in local new chaper path' % dir)
+            for filename in files:
+                count += 1
+                if count > common.MAXCHAPTERPIC:
+                    LOG.error('Chapter img count over size')
+                    raise ValueError('Chapter img count over size')
+                try:
+                    os.rename(os.path.join(src, filename), os.path.join(dst, filename))
+                except (OSError, IOError):
+                    raise
+        return count
+
+    @staticmethod
+    def _convert_new_chapter_from_file(src, dst):
+        count = 0
+        if not os.path.exists(src):
+            raise ValueError('Comic chapter file not exist')
+        LOG.info('Check name from upload file')
+        for filename in zlibutils.iter_files(src):
+            count += 1
+            if count > common.MAXCHAPTERPIC:
+                raise ValueError('Too many file in one chapter')
+            ext = os.path.splitext(filename)[1]
+            if ext.lower() not in common.IMGEXT:
+                raise ValueError('%s not end with img ext' % filename)
+        LOG.info('extract upload file to chapter path')
+        # extract chapter file
+        try:
+            zlibutils.async_extract(src, dst).wait()
+        finally:
+            os.remove(src)
+        LOG.info('extract chapter file success')
+        return count
+
+    def _convert_new_chapter(self, src, cid, chapter, key, logfile):
+        chapter_path = self.chapter_path(cid, chapter)
+        if os.path.isdir(src):
+            count = self._convert_new_chapter_from_dir(src, chapter_path)
+        else:
+            count = self._convert_new_chapter_from_file(src, chapter_path)
+        _key ='%d%s' % (cid, key)
+        convert.convert_chapter(dst=chapter_path, key=_key, logfile=logfile)
+        LOG.info('convert chapter path finish')
+        return count
 
     def index(self, req, body=None):
         """列出漫画"""
@@ -245,13 +318,12 @@ class ComicRequest(MiddlewareContorller):
         comic_path = self.comic_path(cid)
 
         logfile = '%d.conver.%d.log' % (int(time.time()), cid)
-        logfile=os.path.join(CF.logdir, logfile)
+        logfile = os.path.join(self.logdir, logfile)
         tmpfile = 'main.%d.pic' % int(time.time())
         fileinfo.update({'overwrite': tmpfile})
-        tmpfile = os.path.join(comic_path, tmpfile)
+        tmpfile = os.path.join(self.tmpdir, tmpfile)
         if os.path.exists(tmpfile):
             raise exceptions.ComicUploadError('Upload cover file fail')
-
         port = max(WSPORTS)
         WSPORTS.remove(port)
 
@@ -263,8 +335,6 @@ class ComicRequest(MiddlewareContorller):
                 LOG.info('Call shell command convert')
                 convert.convert_cover(tmpfile, logfile=logfile)
                 LOG.info('Convert execute success')
-
-
         ws = LaunchRecverWebsocket(WEBSOCKETPROC)
         try:
             uri = ws.upload(user=CF.user, group=CF.group,
@@ -379,14 +449,13 @@ class ComicRequest(MiddlewareContorller):
         chapter = int(chapter)
         body = body or {}
         jsonutils.schema_validate(body, NEWCHAPTER)
-
         impl = body.get('impl')
         timeout = body.get('timeout')
-
-        logfile = os.path.join(CF.logdir, '%d.chapter.%d.%d.log' %
+        logfile = os.path.join(self.logdir, '%d.chapter.%d.%d.log' %
                                (int(time.time()), cid, chapter))
         comic_path = self.comic_path(cid)
-        chapter_path = self.chapter_path(cid, chapter)
+        # 创建资源url加密key
+        key = ''.join(random.sample(string.lowercase, 6))
 
         if impl['type'] == 'websocket':
             tmpfile = 'chapter.%d.uploading' % int(time.time())
@@ -395,64 +464,55 @@ class ComicRequest(MiddlewareContorller):
             tmpfile = os.path.join(comic_path, tmpfile)
             if os.path.exists(tmpfile):
                 raise exceptions.ComicUploadError('Upload chapter file fail')
+            try:
+                port = WSPORTS.pop()
+            except KeyError:
+                raise InvalidArgument('Too many websocket process')
+
+            def _exitfunc():
+                WSPORTS.add(port)
+                # checket chapter file
+                try:
+                    count = self._convert_new_chapter(tmpfile, cid, chapter, key, logfile)
+                except Exception as e:
+                    LOG.error('convert new chapter from websocket upload file fail')
+                    self._unfinish(cid, chapter)
+                    try:
+                        if os.path.exists(tmpfile):
+                            os.remove(tmpfile)
+                    except (OSError, IOError):
+                        LOG.error('Revmove websocket uploade file %s fail' % tmpfile)
+                    raise e
+                else:
+                    self._finished(cid, chapter, dict(max=count, key=key))
+        elif impl['type'] == 'local':
+            path = impl['path']
+            if '.' in path:
+                raise InvalidArgument('Dot is not allow in path')
+            if path.startswith('/'):
+                raise InvalidArgument('start with / is not allow')
+            path = os.path.join(self.tmpdir, path)
+            if not os.path.exists(path) or not os.path.isdir(path):
+                raise InvalidArgument('Target path not exist')
+
+            def _exitfunc():
+                try:
+                    count = self._convert_new_chapter(path, cid, chapter, key, logfile)
+                except Exception:
+                    LOG.error('convert new chapter from local dir %s fail' % path)
+                    self._unfinish(cid, chapter)
+                    raise
+                else:
+                    self._finished(cid, chapter, dict(max=count, key=key))
+            eventlet.spawn(_exitfunc)
         else:
             raise NotImplementedError
 
 
-        # 创建资源url加密key
-        key = ''.join(random.sample(string.lowercase, 6))
-        port = max(WSPORTS)
-        WSPORTS.remove(port)
-
-        def _exitfunc():
-            WSPORTS.add(port)
-            # checket chapter file
-            count = 0
-            try:
-                if not os.path.exists(tmpfile):
-                    raise ValueError('Comic chapter file not exist')
-                LOG.info('Check name from upload file')
-                for filename in zlibutils.iter_files(tmpfile):
-                    count += 1
-                    if count > common.MAXCHAPTERPIC:
-                        raise ValueError('Too many file in one chapter')
-                    ext = os.path.splitext(filename)[1]
-                    if ext.lower() not in common.IMGEXT:
-                        raise ValueError('%s not end with img ext' % filename)
-            except Exception as e:
-                LOG.error(e.message)
-                try:
-                    if os.path.exists(tmpfile):
-                        os.remove(tmpfile)
-                except (OSError, IOError):
-                    LOG.error('Revmove uploade file %s fail' % tmpfile)
-                finally:
-                    self._unfinish(cid, chapter)
-                    return
-
-            LOG.info('extract upload file to chapter path')
-            # extract chapter file
-            try:
-                zlibutils.async_extract(tmpfile, chapter_path).wait()
-            finally:
-                os.remove(tmpfile)
-            LOG.info('convert chapter path')
-            _key ='%d%s' % (cid, key)
-            try:
-                convert.convert_chapter(src=tmpfile, dst=chapter_path,
-                                        key=_key, logfile=logfile)
-            except Exception:
-                if LOG.isEnabledFor(logging.DEBUG):
-                    LOG.exception('convert error')
-                else:
-                    LOG.error('convert chapter path fail')
-                self._unfinish(cid, chapter)
-            else:
-                LOG.info('convert chapter path finish')
-                self._finished(cid, chapter, dict(key=key, max=count))
-
         session = endpoint_session()
         query = session.query(Comic).filter(Comic.cid == cid).with_for_update()
+
+        worker = None
 
         with _prepare_chapter_path(cid, chapter):
             with session.begin():
@@ -465,7 +525,6 @@ class ComicRequest(MiddlewareContorller):
                 if len(chapters) != comic.last:
                     LOG.error('Comic chapter is uploading')
                     raise InvalidArgument('Comic chapter is uploading')
-
                 comic.last = chapter
                 session.flush()
                 # 注意: 下面的操作会导致漫画被锁定较长时间,
@@ -485,15 +544,17 @@ class ComicRequest(MiddlewareContorller):
 
                         ws.asyncwait(exitfunc=_exitfunc)
                         worker = uri
+                    LOG.info('New chapter from websocket port %d' % port)
+                elif impl['type'] == 'local':
+                    LOG.info('New chapter from local path %s' % path)
                 else:
-                    WSPORTS.add(port)
-                    worker = None #  asyncrequest.to_dict()
                     raise NotImplementedError
 
-        return resultutils.results(result='finished update new chapter',
+        return resultutils.results(result='new chapter spawning',
                                    data=[dict(cid=comic.cid, name=comic.name, worker=worker)])
 
-    def _finished(self, cid, chapter, body):
+    @staticmethod
+    def _finished(cid, chapter, body):
         """章节上传完成 通知开放"""
         max = body.get('max')           # 章节最大页数
         key = body.get('key')           # 加密key
@@ -514,7 +575,8 @@ class ComicRequest(MiddlewareContorller):
             session.flush()
             return comic
 
-    def _unfinish(self, cid, chapter):
+    @staticmethod
+    def _unfinish(cid, chapter):
         """章节上传完成 失败, 通知还原"""
         session = endpoint_session()
         query = session.query(Comic).filter(Comic.cid == cid).with_for_update()
@@ -529,26 +591,26 @@ class ComicRequest(MiddlewareContorller):
                 raise InvalidArgument('Unfinish chapter value error')
             comic.last = last - 1
             session.flush()
-        chapter_path = self.chapter_path(cid, chapter)
+        chapter_path = ComicRequest.chapter_path(cid, chapter)
         try:
             shutil.rmtree(chapter_path)
         except (OSError, IOError):
             LOG.error('Api _unfinsh Remove chapter path %s fail' % chapter_path)
         return comic
 
-    @verify(manager=True)
-    def finished(self, req, cid, chapter, body=None):
-        """章节上传完成 通知开放"""
-        body = body or {}
-        cid = int(cid)
-        chapter = int(chapter)
-        comic = self._finished(cid, chapter, body)
-        return resultutils.results(result='finished comic success', data=[dict(cid=cid, name=comic.name)])
-
-    @verify(manager=True)
-    def unfinish(self, req, cid, chapter, body=None):
-        body = body or {}
-        cid = int(cid)
-        chapter = int(chapter)
-        comic = self._unfinish(cid, chapter)
-        return resultutils.results(result='unfinish comic success', data=[dict(cid=comic.cid, name=comic.name)])
+    # @verify(manager=True)
+    # def finished(self, req, cid, chapter, body=None):
+    #     """章节上传完成 通知开放"""
+    #     body = body or {}
+    #     cid = int(cid)
+    #     chapter = int(chapter)
+    #     comic = self._finished(cid, chapter, body)
+    #     return resultutils.results(result='finished comic success', data=[dict(cid=cid, name=comic.name)])
+    #
+    # @verify(manager=True)
+    # def unfinish(self, req, cid, chapter, body=None):
+    #     body = body or {}
+    #     cid = int(cid)
+    #     chapter = int(chapter)
+    #     comic = self._unfinish(cid, chapter)
+    #     return resultutils.results(result='unfinish comic success', data=[dict(cid=comic.cid, name=comic.name)])

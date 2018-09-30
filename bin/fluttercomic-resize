@@ -69,8 +69,8 @@ def getfiles(path):
 
     for root, dirs, files in os.walk(path, topdown=True):
     # for index, fname in enumerate(os.listdir(path)):
-        if dirs:
-            raise ValueError('Has folder')
+        for dir in dirs:
+            raise ValueError('%s Has folder %s' % (root, dir))
         for fname in files:
             # 提取文件名中的数字
             _keys = re.findall(NUMREGEX, fname)

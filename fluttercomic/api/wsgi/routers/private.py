@@ -66,15 +66,15 @@ class ComicPrivateRouters(router.ComposableRouter):
                        controller=comic_controller, action='new',
                        conditions=dict(method=['POST']))
 
-        mapper.connect('new_chapters',
-                       '/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
-                       controller=comic_controller, action='finished',
-                       conditions=dict(method=['PATCH']))
-
-        mapper.connect('new_chapters',
-                       '/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
-                       controller=comic_controller, action='unfinish',
-                       conditions=dict(method=['DELETE']))
+        # mapper.connect('new_chapters',
+        #                '/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
+        #                controller=comic_controller, action='finished',
+        #                conditions=dict(method=['PATCH']))
+        #
+        # mapper.connect('new_chapters',
+        #                '/%s/private/comic/{cid}/chapters/{chapter}' % common.NAME,
+        #                controller=comic_controller, action='unfinish',
+        #                conditions=dict(method=['DELETE']))
 
 
 @singleton.singleton

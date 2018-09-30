@@ -6,17 +6,11 @@ CONF = cfg.CONF
 
 comic_opts = [
     cfg.StrOpt('basedir',
-               default='/data/www/fluttercomic/cdn',
+               default='/data/www/fluttercomic',
                help='Comic file base dir'),
-    cfg.StrOpt('logdir',
-               default='/data/www/fluttercomic/log',
-               help='Comic log dir'),
     cfg.MultiOpt('ports_range',
                  item_type=cfg.types.PortRange(),
                  help='Websocket ports range in wsgi server'),
-    cfg.StrOpt('tmpdir',
-               default='/data/www/fluttercomic/compressed',
-               help='Comic compressed files local path'),
     cfg.StrOpt('user',
                help='Websocket upload process user'),
     cfg.StrOpt('group',
@@ -25,7 +19,6 @@ comic_opts = [
                help='Websocket upload ipaddr'
                ),
 ]
-
 
 
 def register_opts(group):

@@ -16,7 +16,7 @@ def convert_cover(target, rename='main.jpg', size='1600x1200', maxsize=250000, l
     systemutils.subwait(sub)
 
 
-def convert_chapter(src, dst, key, size='1200x900', maxsize=250000, logfile=None):
+def convert_chapter(dst, key, size='1200x900', maxsize=250000, logfile=None):
     # call convert
     args = [CONVERT, '--target', dst, '-s', size, '-m', str(maxsize), '-k', key, '-o', '3600']
     if logfile:

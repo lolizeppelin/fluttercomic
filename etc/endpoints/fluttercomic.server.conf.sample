@@ -15,16 +15,10 @@
 #publics = fluttercomic.plugin.wsgi.platforms.routers
 
 # Comic file base dir (string value)
-#basedir = /data/www/fluttercomic/cdn
-
-# Comic log dir (string value)
-#logdir = /data/www/fluttercomic/log
+#basedir = /data/www/fluttercomic
 
 # Websocket ports range in wsgi server (port_ranges value)
 #ports_range = <None>
-
-# Comic compressed files local path (string value)
-#tmpdir = /data/www/fluttercomic/compressed
 
 # Websocket upload process user (string value)
 #user = <None>
