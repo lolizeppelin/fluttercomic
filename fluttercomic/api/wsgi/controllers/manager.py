@@ -40,6 +40,7 @@ from fluttercomic.models import UserPayLog
 from fluttercomic.api import endpoint_session
 
 from fluttercomic.api.wsgi.token import verify
+from fluttercomic.api.wsgi.token import M
 from fluttercomic.api.wsgi.utils import format_chapters
 
 
@@ -82,11 +83,11 @@ class ManagerRequest(MiddlewareContorller):
 
     ADMINAPI = False
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def index(self, req, body=None):
         raise NotImplementedError
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def show(self, req, mid, body=None):
         """列出用户信息"""
         mid = int(mid)
@@ -99,11 +100,11 @@ class ManagerRequest(MiddlewareContorller):
                                               books=[dict(cid=book.cid, name=book.name)
                                                      for book in query])])
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def update(self, mid, body=None):
         raise NotImplementedError
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def delete(self, mid, body=None):
         raise NotImplementedError
 
@@ -124,7 +125,7 @@ class ManagerRequest(MiddlewareContorller):
         return resultutils.results(result='manager login success',
                                    data=[dict(token=token, name=manager.name, mid=manager.mid)])
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def loginout(self, req, mid, body=None):
         body = body or {}
         mid = int(mid)

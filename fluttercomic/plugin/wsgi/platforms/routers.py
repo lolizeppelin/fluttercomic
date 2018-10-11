@@ -10,11 +10,6 @@ from fluttercomic.plugin.wsgi.platforms.config import register_opts
 CONF = cfg.CONF
 
 
-group = CONF.find_group(common.NAME)
-
-register_opts(group)
-
-
 class Routers(router.RoutersBase):
 
     resource_name = 'fluttercomicplat'

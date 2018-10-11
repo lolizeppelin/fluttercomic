@@ -5,12 +5,15 @@ from simpleservice import common as service_common
 from goperation.manager import exceptions
 from goperation.manager.tokens import TokenProvider
 
+M = object()    # 管理员
+U = object()    # 普通用户
 
-def verify(manager=True):
+
+def verify(vtype=U):
     """装饰器, 用于接口校验"""
 
     def _check(func):
-        return TokenVerify(func, manager)
+        return TokenVerify(func, vtype)
 
     return _check
 
@@ -35,26 +38,27 @@ def online(req):
 class TokenVerify(object):
     """This Descriptor code copy from Wsgify
     """
-    def __init__(self, func=None, manager=False):
+    def __init__(self, func, vtype):
         self.func = func
-        self.manager = manager
+        self.vtype = vtype
 
     def __get__(self, instance, owner):
         if hasattr(self.func, '__get__'):
-            return self.func.__get__(instance, owner)
+            # return self.func.__get__(instance, owner)
+            self.func = self.func.__get__(instance, owner)
         return self
 
     def __call__(self, req, **kwargs):
-        if not self.manager and not TokenProvider.is_fernet(req):
+        if self.vtype is not M and not TokenProvider.is_fernet(req):
             raise exceptions.TokenError('Not fernet token')
         try:
             token = TokenProvider.token(req)
         except KeyError:
             # 未经认证拦截器校验
             raise exceptions.TokenError('Token not verify or none')
-        if self.manager and not token.get('mid'):
-            raise
+        if self.vtype is M and not token.get('mid'):
+            raise exceptions.TokenError('No manager found in token')
         else:
             if 'uid' in kwargs and (kwargs.get('uid') != str(token.get('uid'))):
-                raise
+                raise exceptions.TokenError('Uid not match')
         return self.func(req, **kwargs)

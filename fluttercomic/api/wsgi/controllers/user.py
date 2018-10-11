@@ -39,6 +39,7 @@ from fluttercomic.models import UserPayLog
 from fluttercomic.api import endpoint_session
 
 from fluttercomic.api.wsgi.token import verify
+from fluttercomic.api.wsgi.token import M
 from fluttercomic.api.wsgi.utils import format_chapters
 
 
@@ -81,7 +82,7 @@ class UserRequest(MiddlewareContorller):
 
     ADMINAPI = False
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def index(self, req, body=None):
         session = endpoint_session(readonly=True)
         query = model_query(session, User)
@@ -92,7 +93,7 @@ class UserRequest(MiddlewareContorller):
                                               status=user.status, regtime=user.regtime) for user in query])
 
     def create(self, req, body=None):
-        """创建用户"""
+        """用户注册"""
         body = body or {}
         session = endpoint_session()
         name = body.get('name')
@@ -108,7 +109,7 @@ class UserRequest(MiddlewareContorller):
         return resultutils.results(result='crate user success',
                                    data=[dict(token=token, uid=user.uid, name=user.name)])
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def show(self, req, uid, body=None):
         """列出用户信息"""
         uid = int(uid)
@@ -128,11 +129,11 @@ class UserRequest(MiddlewareContorller):
                                                     for own in user.owns],
                                               )])
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def update(self, uid, body=None):
         raise NotImplementedError
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def delete(self, uid, body=None):
         raise NotImplementedError
 
@@ -156,7 +157,18 @@ class UserRequest(MiddlewareContorller):
                                               uid=user.uid,
                                               coins=(user.coins + user.gifts))])
 
-    @verify(manager=False)
+    @verify()
+    def coins(self, req, uid, body=None):
+        """用户自查余额"""
+        session = endpoint_session(readonly=True)
+        query = model_query(session, User, filter=User.name == uid)
+        user = query.one()
+        return resultutils.results(result='login success',
+                                   data=[dict(name=user.name,
+                                              uid=user.uid,
+                                              coins=(user.coins + user.gifts))])
+
+    @verify()
     def books(self, req, uid, body=None):
         """列出收藏的漫画"""
         uid = int(uid)
@@ -166,7 +178,7 @@ class UserRequest(MiddlewareContorller):
                                    data=[dict(cid=book.cid, name=book.name, author=book.author)
                                          for book in query])
 
-    @verify(manager=False)
+    @verify()
     def owns(self, req, uid, body=None):
         """列出已经购买的漫画"""
         uid = int(uid)
@@ -176,18 +188,17 @@ class UserRequest(MiddlewareContorller):
                                    data=[dict(cid=own.cid, uid=own.uid, chapters=msgpack.unpackb(own.chapters))
                                          for own in query])
 
-
-    @verify(manager=True)
+    @verify(vtype=M)
     def orders(self, req, uid, body=None):
         """用户订单列表"""
         raise NotImplementedError('orders~~')
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def gitf(self, req, uid, body=None):
         """后台发送gift接口"""
         raise NotImplementedError('gift~~')
 
-    @verify(manager=False)
+    @verify()
     def order(self, req, uid, body=None):
         """创建充值订单"""
         uid = int(uid)

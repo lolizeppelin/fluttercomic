@@ -43,6 +43,7 @@ from fluttercomic.models import Comic
 from fluttercomic.models import Order
 from fluttercomic.api import endpoint_session
 from fluttercomic.api.wsgi.token import verify
+from fluttercomic.api.wsgi.token import M
 from fluttercomic.api.wsgi.token import online
 from fluttercomic.api.wsgi.utils import format_chapters
 from fluttercomic.api.wsgi.controllers import WSPORTS
@@ -73,6 +74,7 @@ COVERUPLOAD = {
          }
 }
 
+# 从websocket上传漫画
 WEBSOCKETUPLOAD = {
         'type': 'object',
         'required': ['type', 'fileinfo'],
@@ -83,6 +85,7 @@ WEBSOCKETUPLOAD = {
              }
     }
 
+# 漫画在本地文件夹
 LOCAL = {
         'type': 'object',
         'required': ['type', 'path'],
@@ -93,6 +96,7 @@ LOCAL = {
              }
     }
 
+# 直接用爬
 SPIDERUPLOAD = {
         'type': 'object',
         'required': ['type', 'url'],
@@ -247,7 +251,7 @@ class ComicRequest(MiddlewareContorller):
                                               lastup=comic.lastup)
                                          for comic in query])
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def create(self, req, body=None):
         """创建新漫画"""
         body = body or {}
@@ -299,15 +303,15 @@ class ComicRequest(MiddlewareContorller):
                                               lastup=comic.lastup,
                                               chapters=format_chapters(point, comic.chapters, chapters))])
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def update(self, req, cid, body=None):
-        pass
+        raise NotImplementedError
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def delete(self, req, cid, body=None):
-        pass
+        raise NotImplementedError
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def cover(self, req, cid, body=None):
         """上传封面"""
         cid = int(cid)
@@ -352,13 +356,12 @@ class ComicRequest(MiddlewareContorller):
         return resultutils.results(result='upload cover get websocket uri success',
                                    data=[uri])
 
-    @verify(manager=False)
+    @verify()
     def buy(self, req, cid, chapter, uid, body=None):
         """购买一个章节"""
         cid = int(cid)
         chapter = int(chapter)
         uid = int(uid)
-        body = body or {}
         session = endpoint_session()
         query = model_query(session, Comic, filter=Comic.cid == cid)
         uquery = session.query(User).filter(User.uid == uid).with_for_update(nowait=True)
@@ -411,7 +414,7 @@ class ComicRequest(MiddlewareContorller):
                                                                        comic.chapters,
                                                                        owns.chapters))])
 
-    @verify(manager=False)
+    @verify()
     def mark(self, req, cid, uid, body=None):
         """收藏漫画"""
         cid = int(cid)
@@ -429,7 +432,7 @@ class ComicRequest(MiddlewareContorller):
         return resultutils.results(result='mark book success',
                                    data=[dict(cid=comic.cid, name=comic.name)])
 
-    @verify(manager=False)
+    @verify()
     def unmark(self, req, cid, uid, body=None):
         """取消收藏"""
         cid = int(cid)
@@ -442,7 +445,7 @@ class ComicRequest(MiddlewareContorller):
             session.flush()
         return resultutils.results(result='unmark book success')
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def new(self, req, cid, chapter, body=None):
         """添加新章节"""
         cid = int(cid)

@@ -20,6 +20,7 @@ from goperation.manager import common as manager_common
 from goperation.manager.utils import resultutils
 
 from fluttercomic.api.wsgi.token import verify
+from fluttercomic.api.wsgi.token import M
 
 
 LOG = logging.getLogger(__name__)
@@ -29,9 +30,6 @@ FAULT_MAP = {
     NoResultFound: webob.exc.HTTPNotFound,
     MultipleResultsFound: webob.exc.HTTPInternalServerError
 }
-
-
-Idformater = argutils.Idformater(key='request_id', formatfunc='request_id_check')
 
 
 INDEXSCHEMA = {
@@ -65,11 +63,11 @@ class OrderRequest(MiddlewareContorller):
 
     ADMINAPI = False
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def index(self, req, body=None):
         """列出订单"""
         pass
 
-    @verify(manager=True)
+    @verify(vtype=M)
     def show(self, req, oid, body=None):
         """订单详情"""
