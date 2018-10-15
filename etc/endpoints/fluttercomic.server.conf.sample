@@ -29,6 +29,9 @@
 # Websocket upload ipaddr (string value)
 #ipaddr = <None>
 
+# Platforms list enabled (list value)
+#platforms =
+
 # The SQLAlchemy connection string to use to connect to the database. (string
 # value)
 #connection = <None>
