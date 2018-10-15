@@ -85,8 +85,6 @@ Flutter comic wsgi routes
 %defattr(-,root,root,-)
 %dir %{python_sitelib}/%{proj_name}/api/wsgi
 %{python_sitelib}/%{proj_name}/api/wsgi/*
-%dir %{python_sitelib}/%{proj_name}/plugin/wsgi
-%{python_sitelib}/%{proj_name}/plugin/wsgi/*
 %{_sysconfdir}/goperation/endpoints/fluttercomic.server.conf.sample
 
 %changelog

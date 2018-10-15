@@ -28,7 +28,7 @@ def configure(config_files):
     # set base confi
     # reg base opts
     # set log config
-
+    logging.register_options(CONF)
     logging.setup(CONF, group.name)
     defalut_logging.captureWarnings(True)
 
