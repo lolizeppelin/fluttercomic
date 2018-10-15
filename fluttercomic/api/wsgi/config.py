@@ -1,8 +1,6 @@
 from simpleutil.config import cfg
 from simpleservice.ormdb.config import database_opts
 
-from fluttercomic.plugin.platforms.config import platforms_opts
-
 CONF = cfg.CONF
 
 
@@ -26,5 +24,4 @@ comic_opts = [
 def register_opts(group):
     # database for gopdb
     CONF.register_opts(comic_opts, group)
-    CONF.register_opts(platforms_opts, group)
     CONF.register_opts(database_opts, group)

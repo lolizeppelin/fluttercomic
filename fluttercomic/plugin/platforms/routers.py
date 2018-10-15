@@ -5,7 +5,6 @@ from simpleservice.wsgi import router
 from simpleservice.wsgi.middleware import controller_return_response
 
 from fluttercomic import common
-from fluttercomic.plugin.wsgi.platforms.config import register_opts
 
 CONF = cfg.CONF
 

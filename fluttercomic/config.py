@@ -10,6 +10,6 @@ def list_server_opts():
     cfg.set_defaults(route_opts,
                      routes=['fluttercomic.api.wsgi.routers.private'],
                      publics=['fluttercomic.api.wsgi.routers.public',
-                              'fluttercomic.plugin.wsgi.platforms.routers'])
+                              'fluttercomic.plugin.platforms.routers'])
     # return route_opts + resource_opts + database_opts
     return route_opts + comic_opts + platforms_opts + database_opts
