@@ -25,6 +25,7 @@ from simpleservice.wsgi.middleware import MiddlewareContorller
 
 
 from goperation import threadpool
+from goperation.manager.exceptions import TokenError
 from goperation.manager import common as manager_common
 from goperation.manager.utils import resultutils
 from goperation.manager.tokens import TokenProvider
@@ -48,6 +49,7 @@ LOG = logging.getLogger(__name__)
 FAULT_MAP = {
     InvalidArgument: webob.exc.HTTPClientError,
     NoResultFound: webob.exc.HTTPNotFound,
+    TokenError: webob.exc.HTTPUnauthorized,
     MultipleResultsFound: webob.exc.HTTPInternalServerError
 }
 

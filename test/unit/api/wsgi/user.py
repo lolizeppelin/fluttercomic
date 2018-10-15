@@ -32,13 +32,16 @@ def configure(config_files):
     logging.setup(CONF, group.name)
     defalut_logging.captureWarnings(True)
 
+basepath = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../etc'))
 
-a = r'D:\backup\etc\goperation\goperation.conf'
-b = r'D:\backup\etc\goperation\gcenter.conf'
+configs = [
+    os.path.join(basepath, 'goperation.conf'),
+    os.path.join(basepath, 'gcenter.conf')
+]
 
-configure([a, b])
+configure(configs)
 
-wsgi_url = '172.31.0.110'
+wsgi_url = '192.168.191.10'
 wsgi_port = 7999
 
 from requests import session
@@ -67,7 +70,7 @@ def user_show(uid, token):
 
 def users_login():
     try:
-        r = client.user_login(uid='gcy', body={'passwd': '111111'})
+        r = client.user_login(uid='gcy', body={'passwd': '111112'})
     except AfterRequestError as e:
         print e.resone
     else:

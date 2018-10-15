@@ -15,7 +15,7 @@ from simpleutil.common.exceptions import InvalidArgument
 from simpleservice.ormdb.api import model_query
 from simpleservice.wsgi.middleware import MiddlewareContorller
 
-
+from goperation.manager.exceptions import TokenError
 from goperation.manager import common as manager_common
 from goperation.manager.utils import resultutils
 
@@ -28,6 +28,7 @@ LOG = logging.getLogger(__name__)
 FAULT_MAP = {
     InvalidArgument: webob.exc.HTTPClientError,
     NoResultFound: webob.exc.HTTPNotFound,
+    TokenError: webob.exc.HTTPUnauthorized,
     MultipleResultsFound: webob.exc.HTTPInternalServerError
 }
 

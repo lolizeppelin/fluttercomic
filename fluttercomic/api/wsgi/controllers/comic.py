@@ -30,6 +30,7 @@ from simpleservice.wsgi.middleware import MiddlewareContorller
 from simpleservice.ormdb.api import model_count_with_key
 
 from goperation.common import FILEINFOSCHEMA
+from goperation.manager.exceptions import TokenError
 from goperation.manager import common as manager_common
 from goperation.manager.utils import resultutils
 from goperation.websocket.launcher import LaunchRecverWebsocket
@@ -61,6 +62,7 @@ WEBSOCKETPROC = 'fluttercomic-websocket'
 FAULT_MAP = {
     InvalidArgument: webob.exc.HTTPClientError,
     NoResultFound: webob.exc.HTTPNotFound,
+    TokenError: webob.exc.HTTPUnauthorized,
     MultipleResultsFound: webob.exc.HTTPInternalServerError
 }
 
