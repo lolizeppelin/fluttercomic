@@ -326,7 +326,7 @@ class ComicRequest(MiddlewareContorller):
         logfile = os.path.join(self.logdir, logfile)
         tmpfile = 'main.%d.pic' % int(time.time())
         fileinfo.update({'overwrite': tmpfile})
-        tmpfile = os.path.join(self.tmpdir, tmpfile)
+        tmpfile = os.path.join(comic_path, tmpfile)
         if os.path.exists(tmpfile):
             raise exceptions.ComicUploadError('Upload cover file fail')
         port = max(WSPORTS)
@@ -335,7 +335,7 @@ class ComicRequest(MiddlewareContorller):
         def _exitfunc():
             WSPORTS.add(port)
             if not os.path.exists(tmpfile):
-                LOG.error('comic cover file not exist')
+                LOG.error('comic cover file %s not exist' % tmpfile)
             else:
                 LOG.info('Call shell command convert')
                 convert.convert_cover(tmpfile, logfile=logfile)
