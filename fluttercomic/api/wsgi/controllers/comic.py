@@ -86,18 +86,16 @@ WEBSOCKETUPLOAD = {
                 'fileinfo': FILEINFOSCHEMA,
              }
     }
-
 # 漫画在本地文件夹
 LOCAL = {
         'type': 'object',
         'required': ['type', 'path'],
         'properties':
             {
-                'type': {'type': 'string', 'enum': ['websocket']},
+                'type': {'type': 'string', 'enum': ['local']},
                 'path': {'type': 'string', 'minimum': 2},
              }
     }
-
 # 直接用爬
 SPIDERUPLOAD = {
         'type': 'object',
@@ -110,6 +108,7 @@ SPIDERUPLOAD = {
                 'ext': {'type': 'object'},
              }
     }
+
 
 NEWCHAPTER = {
     'type': 'object',

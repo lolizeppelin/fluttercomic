@@ -55,7 +55,7 @@ def users_index():
     try:
         r = client.users_index('KJGLAG')
     except AfterRequestError as e:
-        print e.resone
+        print 'index fail: status code %d' % e.code, e.resone
     else:
         print r
 
@@ -63,7 +63,7 @@ def user_show(uid, token):
     try:
         r = client.user_show(uid, token)
     except AfterRequestError as e:
-        print e.resone
+        print 'show fail: status code %d' % e.code, e.resone
     else:
         print r
 
@@ -78,9 +78,10 @@ def users_login():
         token = data['token']
         uid = data['uid']
         print 'login success'
-        user_show(uid, token)
-
+        return uid, token
 
 
 # users_index()
-users_login()
+uid, token = users_login()
+user_show(uid, token)
+users_index()

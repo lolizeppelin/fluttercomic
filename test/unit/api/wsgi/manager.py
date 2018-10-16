@@ -25,20 +25,20 @@ def configure(config_files):
          project=group.name,
          default_config_files=config_files)
     CONF.register_group(group)
-    # set base confi
-    # reg base opts
-    # set log config
-    logging.register_options(CONF)
     logging.setup(CONF, group.name)
     defalut_logging.captureWarnings(True)
 
 
-a = r'D:\backup\etc\goperation\goperation.conf'
-b = r'D:\backup\etc\goperation\gcenter.conf'
+basepath = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../etc'))
 
-configure([a, b])
+configs = [
+    os.path.join(basepath, 'goperation.conf'),
+    os.path.join(basepath, 'gcenter.conf')
+]
 
-wsgi_url = '172.31.0.110'
+configure(configs)
+
+wsgi_url = '192.168.191.10'
 wsgi_port = 7999
 
 from requests import session
@@ -62,23 +62,26 @@ def manager_show(mid, token):
     except AfterRequestError as e:
         print e.resone
     else:
+        print 'show manager success'
         print r
 
 
 def manager_login():
     try:
-        r = client.manager_login(mid='admin', body={'passwd': '111111'})
+        r = client.manager_login(mid='admin', body={'passwd': 'admin'})
     except AfterRequestError as e:
         print e.resone
     else:
         data = r['data'][0]
         token = data['token']
-        print token
         mid = data['mid']
         print 'login success'
+        return mid, token
         # manager_show(mid, token)
 
 
 
 # users_index()
-manager_login()
+mid, token = manager_login()
+print token
+manager_show(mid, token)

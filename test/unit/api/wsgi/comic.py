@@ -17,6 +17,7 @@ from fluttercomic.api.client import FlutterComicClient
 
 CONF = cfg.CONF
 logging.register_options(CONF)
+logging.register_options(CONF)
 
 def configure(config_files):
     group = cfg.OptGroup(name='test', title='group for test')
@@ -28,19 +29,21 @@ def configure(config_files):
     # set base confi
     # reg base opts
     # set log config
-
     logging.setup(CONF, group.name)
     defalut_logging.captureWarnings(True)
 
 
-a = r'D:\backup\etc\goperation\goperation.conf'
-b = r'D:\backup\etc\goperation\gcenter.conf'
+basepath = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../etc'))
 
-configure([a, b])
+configs = [
+    os.path.join(basepath, 'goperation.conf'),
+    os.path.join(basepath, 'gcenter.conf')
+]
 
-wsgi_url = '172.31.0.110'
+configure(configs)
+
+wsgi_url = '192.168.191.10'
 wsgi_port = 7999
-
 from requests import session
 
 httpclient = ManagerClient(wsgi_url, wsgi_port, timeout=30, session=session())

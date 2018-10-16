@@ -94,13 +94,12 @@ class ManagerRequest(MiddlewareContorller):
         """列出用户信息"""
         mid = int(mid)
         session = endpoint_session(readonly=True)
-        query = model_query(session, User, filter=User.uid == mid)
-        user = query.one()
-        query = model_query(session, UserBook, filter=UserBook.uid == mid)
-        return resultutils.results(result='show user success',
-                                   data=[dict(name=user.name, coins=user.coins,
-                                              books=[dict(cid=book.cid, name=book.name)
-                                                     for book in query])])
+        query = model_query(session, Manager, filter=Manager.uid == mid)
+        manager = query.one()
+        sopce = msgpack.unpackb(manager.sopce) if manager.sopce else []
+        return resultutils.results(result='show manager success',
+                                   data=[dict(name=manager.name,
+                                              status=manager.status, sopce=sopce)])
 
     @verify(vtype=M)
     def update(self, mid, body=None):

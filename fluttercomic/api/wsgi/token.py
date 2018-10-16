@@ -59,6 +59,6 @@ class TokenVerify(object):
         if self.vtype is M and not token.get('mid'):
             raise exceptions.TokenError('No manager found in token')
         else:
-            if 'uid' in kwargs and (kwargs.get('uid') != str(token.get('uid'))):
+            if self.vtype is not M and 'uid' in kwargs and (kwargs.get('uid') != str(token.get('uid'))):
                 raise exceptions.TokenError('Uid not match')
         return self.func(req, **kwargs)
