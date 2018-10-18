@@ -5,8 +5,8 @@ from simpleservice import common as service_common
 from goperation.manager import exceptions
 from goperation.manager.tokens import TokenProvider
 
-M = object()    # 管理员
-U = object()    # 普通用户
+M = object()    # 管理员接口
+U = object()    # 普通用户接口
 
 
 def verify(vtype=U):
@@ -49,7 +49,8 @@ class TokenVerify(object):
         return self
 
     def __call__(self, req, **kwargs):
-        if self.vtype is not M and not TokenProvider.is_fernet(req):
+        # 普通用户必须是fernet token
+        if self.vtype is U and not TokenProvider.is_fernet(req):
             raise exceptions.TokenError('Not fernet token')
         try:
             token = TokenProvider.token(req)

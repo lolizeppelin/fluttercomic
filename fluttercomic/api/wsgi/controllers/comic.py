@@ -190,9 +190,11 @@ class ComicRequest(MiddlewareContorller):
     def _convert_new_chapter_from_dir(src, dst):
         count = 0
         for root, dirs, files in os.walk(src, topdown=True):
-            for dir in dirs:
+            if dirs:
                 LOG.error('folder %s in local new chaper path' % dir)
                 raise ValueError('folder %s in local new chaper path' % dir)
+            if not files:
+                raise exceptions.ComicUploadError('No file in path %s')
             for filename in files:
                 count += 1
                 if count > common.MAXCHAPTERPIC:
@@ -488,7 +490,7 @@ class ComicRequest(MiddlewareContorller):
                         LOG.error('Revmove websocket uploade file %s fail' % tmpfile)
                     raise e
                 else:
-                    self._finished(cid, chapter, dict(max=count, key=key))
+                    self._finishe(cid, chapter, dict(max=count, key=key))
         elif impl['type'] == 'local':
             path = impl['path']
             if '.' in path:
@@ -497,7 +499,7 @@ class ComicRequest(MiddlewareContorller):
                 raise InvalidArgument('start with / is not allow')
             path = os.path.join(self.tmpdir, path)
             if not os.path.exists(path) or not os.path.isdir(path):
-                raise InvalidArgument('Target path not exist')
+                raise InvalidArgument('Target path %s not exist' % path)
 
             def _exitfunc():
                 try:
@@ -507,7 +509,7 @@ class ComicRequest(MiddlewareContorller):
                     self._unfinish(cid, chapter)
                     raise
                 else:
-                    self._finished(cid, chapter, dict(max=count, key=key))
+                    self._finishe(cid, chapter, dict(max=count, key=key))
             eventlet.spawn(_exitfunc)
         else:
             raise NotImplementedError
@@ -557,8 +559,19 @@ class ComicRequest(MiddlewareContorller):
         return resultutils.results(result='new chapter spawning',
                                    data=[dict(cid=comic.cid, name=comic.name, worker=worker)])
 
+    def finished(self, req, cid, chapter, body=None):
+        session = endpoint_session(readonly=True)
+        query = session.query(Comic).filter(Comic.cid == cid)
+        comic = query.one()
+        if comic.last < chapter:
+            return resultutils.results(result='chapter is unfinish', resultcode=manager_common.RESULT_ERROR)
+        elif comic.last == chapter:
+            if len(msgpack.unpackb(comic.chapters)) != chapter:
+                return resultutils.results(result='chapter is unfinish', resultcode=manager_common.RESULT_ERROR)
+        return resultutils.results(result='chapter is finish')
+
     @staticmethod
-    def _finished(cid, chapter, body):
+    def _finishe(cid, chapter, body):
         """章节上传完成 通知开放"""
         max = body.get('max')           # 章节最大页数
         key = body.get('key')           # 加密key
