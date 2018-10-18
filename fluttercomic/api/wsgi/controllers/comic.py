@@ -504,8 +504,9 @@ class ComicRequest(MiddlewareContorller):
             def _exitfunc():
                 try:
                     count = self._convert_new_chapter(path, cid, chapter, key, logfile)
-                except Exception:
-                    LOG.error('convert new chapter from local dir %s fail' % path)
+                except Exception as e:
+                    LOG.error('convert new chapter from local dir %s fail, %s' % (path, e.__class__.__name__))
+                    LOG.debug(e.message)
                     self._unfinish(cid, chapter)
                     raise
                 else:
