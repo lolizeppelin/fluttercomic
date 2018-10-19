@@ -77,6 +77,7 @@ class Comic(TableBase):
     point = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)         # 条件点
     last = sa.Column(SMALLINT(unsigned=True), nullable=False, default=0)         # 最后章节
     lastup = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)        # 最后更新时间
+    ext = sa.Column(VARCHAR(4), nullable=False, default='webp')                  # 图片类型
     chapters = sa.Column(BLOB, nullable=False, default=EMPTYLIST)                # 章节信息
 
     __table_args__ = (

@@ -54,12 +54,16 @@ command_opts = [
                ),
     cfg.StrOpt('rename',
                short='r',
-               default='main.jpg',
+               default='main.webp',
                help='img file rename'),
     cfg.IntOpt('timeout',
                short='o',
                default=3600,
-               help='max conver execute time')
+               help='max conver execute time'),
+    cfg.StrOpt('ext',
+               short='e',
+               default='webp',
+               help='img type file ext')
 ]
 
 
@@ -91,9 +95,9 @@ def getfiles(path):
     _files.sort(key=lambda x: sum([10**(len(x.keys)-1-i)*value for i, value in enumerate(x.keys)]))
 
     # for index, _file in enumerate(_files):
-    #     _file.rename = '%d.jpg' % (index + 1)
+    #     _file.rename = '%d.webp' % (index + 1)
     # return _files
-    return [FILENAME(_file.name, '%d.jpg'% (index+1), []) for index, _file in enumerate(_files)]
+    return [FILENAME(_file.name, '%d.%s' % (index+1, CONF.ext), []) for index, _file in enumerate(_files)]
 
 
 def quality(src, maxsize):
@@ -105,10 +109,20 @@ def quality(src, maxsize):
     return 100
 
 
+def get_img_type(src):
+    imgtype = imghdr.what(src)
+    if imgtype is None:
+        with open(imgtype, 'rb') as f:
+            buf = f.read(12)
+            if buf[:4] == 'RIFF' and buf[4:] == 'WEBP':
+                return 'webp'
+    return None
+
 def is_pic(src):
-    _type = imghdr.what(src)
-    if _type in ALLOW:
+    imgtype = get_img_type(src)
+    if imgtype and imgtype in ALLOW:
         return True
+    LOG.error('%s not in allow img file list' % imgtype)
     return False
 
 

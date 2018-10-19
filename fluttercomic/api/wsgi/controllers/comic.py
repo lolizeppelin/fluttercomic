@@ -228,14 +228,14 @@ class ComicRequest(MiddlewareContorller):
         LOG.info('extract chapter file success')
         return count
 
-    def _convert_new_chapter(self, src, cid, chapter, key, logfile):
+    def _convert_new_chapter(self, src, cid, ext, chapter, key, logfile):
         chapter_path = self.chapter_path(cid, chapter)
         if os.path.isdir(src):
             count = self._convert_new_chapter_from_dir(src, chapter_path)
         else:
             count = self._convert_new_chapter_from_file(src, chapter_path)
         _key ='%d%s' % (cid, key)
-        convert.convert_chapter(dst=chapter_path, key=_key, logfile=logfile)
+        convert.convert_chapter(dst=chapter_path, ext=ext, key=_key, logfile=logfile)
         LOG.info('convert chapter path finish')
         return count
 
@@ -251,6 +251,7 @@ class ComicRequest(MiddlewareContorller):
                                               region=comic.region,
                                               point=comic.point,
                                               last=comic.last,
+                                              ext=comic.ext,
                                               lastup=comic.lastup)
                                          for comic in query])
 
@@ -304,6 +305,7 @@ class ComicRequest(MiddlewareContorller):
                                               point=comic.point,
                                               last=comic.last,
                                               lastup=comic.lastup,
+                                              ext=comic.ext,
                                               chapters=format_chapters(point, comic.chapters, chapters))])
 
     @verify(vtype=M)
@@ -331,6 +333,12 @@ class ComicRequest(MiddlewareContorller):
         tmpfile = os.path.join(comic_path, tmpfile)
         if os.path.exists(tmpfile):
             raise exceptions.ComicUploadError('Upload cover file fail')
+
+        session = endpoint_session(readonly=True)
+        query = model_query(session, Comic, filter=Comic.cid == cid)
+        comic = query.one()
+        rename = 'main.%s' % comic.ext
+
         port = max(WSPORTS)
         WSPORTS.remove(port)
 
@@ -340,7 +348,7 @@ class ComicRequest(MiddlewareContorller):
                 LOG.error('comic cover file %s not exist' % tmpfile)
             else:
                 LOG.info('Call shell command convert')
-                convert.convert_cover(tmpfile, logfile=logfile)
+                convert.convert_cover(tmpfile, rename=rename, logfile=logfile)
                 LOG.info('Convert execute success')
         ws = LaunchRecverWebsocket(WEBSOCKETPROC)
         try:
@@ -413,6 +421,7 @@ class ComicRequest(MiddlewareContorller):
                                               name=comic.name,
                                               author=comic.author,
                                               type=comic.type,
+                                              ext=comic.ext,
                                               chapters=format_chapters(comic.point,
                                                                        comic.chapters,
                                                                        owns.chapters))])
@@ -463,6 +472,8 @@ class ComicRequest(MiddlewareContorller):
         # 创建资源url加密key
         key = ''.join(random.sample(string.lowercase, 6))
 
+        ext = ''
+
         if impl['type'] == 'websocket':
             tmpfile = 'chapter.%d.uploading' % int(time.time())
             fileinfo = impl.get('fileinfo')
@@ -477,9 +488,10 @@ class ComicRequest(MiddlewareContorller):
 
             def _exitfunc():
                 WSPORTS.add(port)
+                LOG.info('Try convert new chapter %d.%d from file:%s, type %s' % (cid, chapter, tmpfile, ext))
                 # checket chapter file
                 try:
-                    count = self._convert_new_chapter(tmpfile, cid, chapter, key, logfile)
+                    count = self._convert_new_chapter(tmpfile, cid, ext, chapter, key, logfile)
                 except Exception as e:
                     LOG.error('convert new chapter from websocket upload file fail')
                     self._unfinish(cid, chapter)
@@ -502,8 +514,9 @@ class ComicRequest(MiddlewareContorller):
                 raise InvalidArgument('Target path %s not exist' % path)
 
             def _exitfunc():
+                LOG.info('Try convert new chapter %d.%d from path:%s, type %s' % (cid, chapter, tmpfile, ext))
                 try:
-                    count = self._convert_new_chapter(path, cid, chapter, key, logfile)
+                    count = self._convert_new_chapter(path, cid, ext, chapter, key, logfile)
                 except Exception as e:
                     LOG.error('convert new chapter from local dir %s fail, %s' % (path, e.__class__.__name__))
                     LOG.debug(e.message)
@@ -534,6 +547,7 @@ class ComicRequest(MiddlewareContorller):
                     raise InvalidArgument('Comic chapter is uploading')
                 comic.last = chapter
                 session.flush()
+                ext = comic.ext
                 # 注意: 下面的操作会导致漫画被锁定较长时间,
                 if impl['type'] == 'websocket':
                     ws = LaunchRecverWebsocket(WEBSOCKETPROC)
