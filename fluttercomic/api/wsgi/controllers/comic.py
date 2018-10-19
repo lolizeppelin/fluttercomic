@@ -501,7 +501,7 @@ class ComicRequest(MiddlewareContorller):
 
             def _websocket_func():
                 WSPORTS.add(port)
-                LOG.info('Try convert new chapter %d.%d from file:%s, type %s' % (cid, chapter, tmpfile, ext))
+                LOG.info('Try convert new chapter %d.%d from file:%s, type:%s' % (cid, chapter, tmpfile, ext))
                 # checket chapter file
                 try:
                     count = self._convert_new_chapter(tmpfile, cid, ext, chapter, key, logfile)
