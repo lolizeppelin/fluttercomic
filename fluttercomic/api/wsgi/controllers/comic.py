@@ -583,6 +583,7 @@ class ComicRequest(MiddlewareContorller):
                     LOG.info('New chapter from websocket port %d' % port)
                 elif impl['type'] == 'local':
                     LOG.info('New chapter from local path %s' % path)
+                    eventlet.spawn(_exitfunc)
                 else:
                     raise NotImplementedError
 
