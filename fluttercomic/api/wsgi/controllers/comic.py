@@ -93,7 +93,7 @@ LOCAL = {
         'properties':
             {
                 'type': {'type': 'string', 'enum': ['local']},
-                'path': {'type': 'string', 'minimum': 2},
+                'path': {'type': 'string', 'minLength': 2},
              }
     }
 # 直接用爬
@@ -109,7 +109,6 @@ SPIDERUPLOAD = {
              }
     }
 
-
 NEWCHAPTER = {
     'type': 'object',
     'required': ['impl', 'timeout'],
@@ -117,6 +116,19 @@ NEWCHAPTER = {
         {
              'impl': {'oneOf': [WEBSOCKETUPLOAD, SPIDERUPLOAD, LOCAL]},
              'timeout': {'type': 'integer', 'minimum': 30, 'maximun': 1200},                   # pagen number
+         }
+}
+
+NEWCOMIC = {
+    'type': 'object',
+    'required': ['name', 'type', 'region', 'author'],
+    'properties':
+        {
+             'name': {'type': 'string', 'minLength': 2, 'maxLength': 128},
+             'type': {'type': 'string', 'minLength': 2, 'maxLength': 16},
+             'region': {'type': 'string', 'minLength': 2, 'maxLength': 8},
+             'author': {'type': 'string', 'minLength': 2, 'maxLength': 128},
+             'ext': {'type': 'string', 'enum': ['webp', 'jpg', 'png']},
          }
 }
 
@@ -259,13 +271,15 @@ class ComicRequest(MiddlewareContorller):
     def create(self, req, body=None):
         """创建新漫画"""
         body = body or {}
-
+        jsonutils.schema_validate(body, NEWCOMIC)
         name = body.get('name')
         type = body.get('type')
         region = body.get('region')
         author = body.get('author')
+        ext = body.get('ext', 'webp')
+
         session = endpoint_session()
-        comic = Comic(name=name, type=type, author=author, region=region)
+        comic = Comic(name=name, type=type, author=author, region=region, ext=ext)
         with _prepare_comic_path() as prepare:
             with session.begin():
                 session.add(comic)
