@@ -500,7 +500,7 @@ class ComicRequest(MiddlewareContorller):
             except KeyError:
                 raise InvalidArgument('Too many websocket process')
 
-            def _exitfunc():
+            def _websocket_func():
                 WSPORTS.add(port)
                 LOG.info('Try convert new chapter %d.%d from file:%s, type %s' % (cid, chapter, tmpfile, ext))
                 # checket chapter file
@@ -527,7 +527,7 @@ class ComicRequest(MiddlewareContorller):
             if not os.path.exists(path) or not os.path.isdir(path):
                 raise InvalidArgument('Target path %s not exist' % path)
 
-            def _exitfunc():
+            def _local_func():
                 LOG.info('Try convert new chapter %d.%d from path:%s, type %s' % (cid, chapter, tmpfile, ext))
                 try:
                     count = self._convert_new_chapter(path, cid, ext, chapter, key, logfile)
@@ -538,7 +538,6 @@ class ComicRequest(MiddlewareContorller):
                     raise
                 else:
                     self._finishe(cid, chapter, dict(max=count, key=key))
-            eventlet.spawn(_exitfunc)
         else:
             raise NotImplementedError
 
@@ -578,12 +577,12 @@ class ComicRequest(MiddlewareContorller):
                                                    resultcode=manager_common.RESULT_ERROR)
                     else:
 
-                        ws.asyncwait(exitfunc=_exitfunc)
+                        ws.asyncwait(exitfunc=_websocket_func)
                         worker = uri
                     LOG.info('New chapter from websocket port %d' % port)
                 elif impl['type'] == 'local':
-                    LOG.info('New chapter from local path %s' % path)
-                    eventlet.spawn(_exitfunc)
+                    LOG.info('New chapter from local path %s, spawning' % path)
+                    eventlet.spawn(_local_func)
                 else:
                     raise NotImplementedError
 
