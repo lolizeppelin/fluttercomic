@@ -485,7 +485,6 @@ class ComicRequest(MiddlewareContorller):
         comic_path = self.comic_path(cid)
         # 创建资源url加密key
         key = ''.join(random.sample(string.lowercase, 6))
-
         ext = ''
 
         if impl['type'] == 'websocket':
@@ -528,7 +527,7 @@ class ComicRequest(MiddlewareContorller):
                 raise InvalidArgument('Target path %s not exist' % path)
 
             def _local_func():
-                LOG.info('Try convert new chapter %d.%d from path:%s, type %s' % (cid, chapter, tmpfile, ext))
+                LOG.info('Try convert new chapter %d.%d from path:%s, type:%s' % (cid, chapter, path, ext))
                 try:
                     count = self._convert_new_chapter(path, cid, ext, chapter, key, logfile)
                 except Exception as e:
