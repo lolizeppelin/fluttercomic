@@ -111,12 +111,13 @@ def quality(src, maxsize):
 
 def get_img_type(src):
     imgtype = imghdr.what(src)
-    if not imgtype:
-        with open(src, 'rb') as f:
-            buf = f.read(12)
-            if buf[:4] == 'RIFF' and buf[-4:] == 'WEBP':
-                return 'webp'
-    return None
+    if imgtype:
+        return imgtype
+    with open(src, 'rb') as f:
+        buf = f.read(12)
+        if buf[:4] == 'RIFF' and buf[-4:] == 'WEBP':
+            return 'webp'
+
 
 def is_pic(src):
     imgtype = get_img_type(src)
