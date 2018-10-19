@@ -551,6 +551,7 @@ class ComicRequest(MiddlewareContorller):
         with _prepare_chapter_path(cid, chapter):
             with session.begin():
                 comic = query.one()
+                LOG.info('Crate New chapter of %d' % cid)
                 last = comic.last
                 if (last +1) != chapter:
                     raise InvalidArgument('New chapter value  error')
