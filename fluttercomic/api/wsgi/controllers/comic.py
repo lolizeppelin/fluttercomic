@@ -196,7 +196,7 @@ class ComicRequest(MiddlewareContorller):
 
     @staticmethod
     def chapter_path(comic, chapter):
-        return os.path.join(ComicRequest.cdndir, str(chapter))
+        return os.path.join(ComicRequest.cdndir, str(comic), str(chapter))
 
     @staticmethod
     def _convert_new_chapter_from_dir(src, dst):
