@@ -23,7 +23,12 @@ logging.register_options(CONF)
 
 LOG = logging.getLogger('fluttercomic.plugin.convert')
 
-ALLOW = set([ext[1:] for ext in IMGEXT])
+ALLOW = frozenset([ext[1:] for ext in IMGEXT])
+
+JPGHEADS = frozenset([
+    (chr(255) + chr(216) + chr(255) + chr(219)),    # FF D8 FF EE
+    (chr(255) + chr(216) + chr(255) + chr(238)),    # FF D8 FF DB
+])
 
 NUMREGEX = re.compile('\d+')
 
@@ -117,6 +122,8 @@ def get_img_type(src):
         buf = f.read(12)
         if buf[:4] == 'RIFF' and buf[-4:] == 'WEBP':
             return 'webp'
+        if buf[:4] in JPGHEADS:
+            return 'jpg'
 
 
 def is_pic(src):
