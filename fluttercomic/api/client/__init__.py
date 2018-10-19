@@ -240,27 +240,3 @@ class FlutterComicClient(GopHttpClientApi):
                                             code=resp.status_code,
                                             resone=results['result'])
         return results
-
-    def chapter_finsh(self, cid, chapter, token, body):
-        headers = {common.TOKENNAME: token, common.FERNETHEAD: 'yes'}
-        resp, results = self.patch(action=self.chapter_path % (self.PRIVATE, cid, chapter),
-                                   headers=headers, body=body)
-        if results['resultcode'] != common.RESULT_SUCCESS:
-            raise ServerExecuteRequestError(message='fluttercomic comic create finish fail:%d' %
-                                                    results['resultcode'],
-                                            code=resp.status_code,
-                                            resone=results['result'])
-        return results
-
-    def chapter_unfinsh(self, cid, chapter, token, body):
-        headers = {common.TOKENNAME: token, common.FERNETHEAD: 'yes'}
-        resp, results = self.delete(action=self.chapter_path % (self.PRIVATE, cid, chapter),
-                                    headers=headers, body=body)
-        if results['resultcode'] != common.RESULT_SUCCESS:
-            raise ServerExecuteRequestError(message='fluttercomic comic create unfinish fail:%d' %
-                                                    results['resultcode'],
-                                            code=resp.status_code,
-                                            resone=results['result'])
-        return results
-
-    # ----------manager api ---------------

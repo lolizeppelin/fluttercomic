@@ -45,6 +45,7 @@ class ComicPrivateRouters(router.ComposableRouter):
                           collection_actions=['index', 'create'],
                           member_actions=['show', 'update', 'delete'])
         collection.member.link('cover', method='PUT')
+        collection.member.link('autocover', method='PUT')
 
         mapper.connect('mark_comics',
                        '/%s/private/comic/{cid}/user/{uid}' % common.NAME,

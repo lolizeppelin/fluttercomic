@@ -379,6 +379,21 @@ class ComicRequest(MiddlewareContorller):
         return resultutils.results(result='upload cover get websocket uri success',
                                    data=[uri])
 
+    def autocover(self, req, cid, body=None):
+        """自动生成封面"""
+        cid = int(cid)
+        session = endpoint_session(readonly=True)
+        query = model_query(session, Comic, filter=Comic.cid == cid)
+        comic = query.one()
+        src = os.path.join(self.chapter_path(comic.cid, 1), '1.%s' % comic.ext)
+        dst = os.path.join(self.comic_path(comic.chapters), 'main.%s' % comic.ext)
+        if os.path.exists(dst):
+            return resultutils.results('Conver exist, do nothing')
+        if not os.path.exists(src):
+            raise InvalidArgument('Auth set cover pic fail, chapter 1 not exist')
+        shutil.copy(src, dst)
+        return resultutils.results('Auto set conver success')
+
     @verify()
     def buy(self, req, cid, chapter, uid, body=None):
         """购买一个章节"""
