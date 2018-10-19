@@ -532,7 +532,8 @@ class ComicRequest(MiddlewareContorller):
                     count = self._convert_new_chapter(path, cid, ext, chapter, key, logfile)
                 except Exception as e:
                     LOG.error('convert new chapter from local dir %s fail, %s' % (path, e.__class__.__name__))
-                    LOG.debug(e.message)
+                    if LOG.isEnabledFor(logging.DEBUG):
+                        LOG.exception(e.message)
                     self._unfinish(cid, chapter)
                     raise
                 else:
@@ -638,6 +639,7 @@ class ComicRequest(MiddlewareContorller):
             comic.last = last - 1
             session.flush()
         chapter_path = ComicRequest.chapter_path(cid, chapter)
+        LOG.error('Chapter %d.%d unfinish success, try remove chapter path')
         try:
             shutil.rmtree(chapter_path)
         except (OSError, IOError):
