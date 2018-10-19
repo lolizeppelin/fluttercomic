@@ -200,23 +200,21 @@ class ComicRequest(MiddlewareContorller):
 
     @staticmethod
     def _convert_new_chapter_from_dir(src, dst):
-        count = 0
         for root, dirs, files in os.walk(src, topdown=True):
             if dirs:
                 LOG.error('folder %s in local new chaper path' % dir)
                 raise ValueError('folder %s in local new chaper path' % dir)
             if not files:
-                raise exceptions.ComicUploadError('No file in path %s')
+                raise exceptions.ComicUploadError('No file in path %s' % root)
+            if len(files) >  common.MAXCHAPTERPIC:
+                LOG.error('Chapter img count over size')
+                raise ValueError('Chapter img count over size')
             for filename in files:
-                count += 1
-                if count > common.MAXCHAPTERPIC:
-                    LOG.error('Chapter img count over size')
-                    raise ValueError('Chapter img count over size')
                 try:
                     os.rename(os.path.join(src, filename), os.path.join(dst, filename))
                 except (OSError, IOError):
                     raise
-        return count
+            return len(files)
 
     @staticmethod
     def _convert_new_chapter_from_file(src, dst):
@@ -639,7 +637,7 @@ class ComicRequest(MiddlewareContorller):
             comic.last = last - 1
             session.flush()
         chapter_path = ComicRequest.chapter_path(cid, chapter)
-        LOG.error('Chapter %d.%d unfinish success, try remove chapter path')
+        LOG.error('Chapter %d.%d unfinish success, try remove chapter path' % (cid, chapter))
         try:
             shutil.rmtree(chapter_path)
         except (OSError, IOError):
