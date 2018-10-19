@@ -407,7 +407,7 @@ class ComicRequest(MiddlewareContorller):
             user.gifts = gifts - gift
             owns = oquery.one_or_none()
             if not owns:
-                owns = UserOwn(uid=uid, cid=cid, chapters=msgpack.packb([chapter, ]))
+                owns = UserOwn(uid=uid, cid=cid, ext=comic.ext, chapters=msgpack.packb([chapter, ]))
                 session.add(owns)
                 session.flush()
             else:
@@ -437,7 +437,7 @@ class ComicRequest(MiddlewareContorller):
         query = model_query(session, Comic.name, filter=Comic.cid == cid)
         comic = query.one()
         try:
-            session.add(UserBook(uid=uid, cid=cid, name=comic.name, time=int(time.time())))
+            session.add(UserBook(uid=uid, cid=cid, ext=comic.ext, name=comic.name, time=int(time.time())))
             session.flush()
         except DBDuplicateEntry:
             LOG.warning('User alreday mark comic')

@@ -95,6 +95,7 @@ class UserBook(TableBase):
                     primary_key=True)                                           # 漫画ID
     name = sa.Column(VARCHAR(128), nullable=False)                              # 漫画名
     author = sa.Column(VARCHAR(128), nullable=False)                            # 漫画作者
+    ext = sa.Column(VARCHAR(4), nullable=False)                                 # 图片类型
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 收藏时间
 
     __table_args__ = (
@@ -109,6 +110,7 @@ class UserOwn(TableBase):
                     nullable=False, primary_key=True)                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
+    ext = sa.Column(VARCHAR(4), nullable=False)                                 # 图片类型
     chapters = sa.Column(BLOB, nullable=False, default=EMPTYLIST)               # 拥有章节
 
     __table_args__ = (

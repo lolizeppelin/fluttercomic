@@ -177,7 +177,7 @@ class UserRequest(MiddlewareContorller):
         session = endpoint_session(readonly=True)
         query = model_query(session, UserBook, filter=UserBook.uid == uid)
         return resultutils.results(result='get book success',
-                                   data=[dict(cid=book.cid, name=book.name, author=book.author)
+                                   data=[dict(cid=book.cid, name=book.name, author=book.author, ext=book.ext)
                                          for book in query])
 
     @verify()
@@ -187,7 +187,8 @@ class UserRequest(MiddlewareContorller):
         session = endpoint_session(readonly=True)
         query = model_query(session, UserOwn, filter=UserOwn.uid == uid)
         return resultutils.results(result='get owns comics success',
-                                   data=[dict(cid=own.cid, uid=own.uid, chapters=msgpack.unpackb(own.chapters))
+                                   data=[dict(cid=own.cid, ext=own.ext, uid=own.uid,
+                                              chapters=msgpack.unpackb(own.chapters))
                                          for own in query])
 
     @verify(vtype=M)
