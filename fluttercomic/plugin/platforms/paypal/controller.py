@@ -82,7 +82,7 @@ class PaypalRequest(PlatformsRequestBase):
         if cid < 0 or chapter < 0:
             raise InvalidArgument('cid or chapter less then 0')
         oid = uuidutils.Gkey()
-        return template.html(oid, uid, cid, chapter, money)
+        return template.html(oid, uid, cid, chapter, money, '')
 
     def new(self, req, body=None):
         """发起订单"""
