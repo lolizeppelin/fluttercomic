@@ -1,9 +1,3 @@
-# -*- coding:utf-8 -*-
-"""
-HTMLTEMPLATE 是paypal充值页面模板
-"""
-from simpleutil.utils import encodeutils
-
 HTMLTEMPLATE = '''
 <script src="https://www.paypalobjects.com/api/checkout.js"></script>
 
@@ -38,10 +32,4 @@ HTMLTEMPLATE = '''
 </script>
 '''
 
-
-def html(oid, uid, cid, chapter, money):
-    buf = HTMLTEMPLATE % {'oid': oid, 'uid': uid, 'money': money, 'cid': cid, 'chapter': chapter}
-    return encodeutils.safe_decode(buf, 'utf-8')
-
-def translate(money):
-    return money*10, 0
+print HTMLTEMPLATE % {'uid': 0, 'cid': 0, 'chapter': 0, 'money': 0, 'oid': 0}

@@ -18,7 +18,7 @@ class Routers(router.RoutersBase):
         conf = CONF[common.NAME]
 
         for platform in conf.platforms:
-            mod = 'fluttercomic.plugin.wsgi.platforms.%s.controller' % platform.lower()
+            mod = 'fluttercomic.plugin.platforms.%s.controller' % platform.lower()
             module = importutils.import_module(mod)
             cls = getattr(module, '%sRequest' % platform.capitalize())
             controller = controller_return_response(cls(), module.FAULT_MAP)

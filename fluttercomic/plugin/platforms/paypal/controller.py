@@ -42,6 +42,10 @@ LOG = logging.getLogger(__name__)
 
 paypalApi = PayPalApi(CONF[config.NAME])
 
+FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
+             NoResultFound: webob.exc.HTTPNotFound,
+             MultipleResultsFound: webob.exc.HTTPInternalServerError}
+
 
 @singleton.singleton
 class PaypalRequest(PlatformsRequestBase):
@@ -54,7 +58,7 @@ class PaypalRequest(PlatformsRequestBase):
         money = req.params.get('money')
         uid = req.params.get('uid')
         cid = req.params.get('cid') or 0
-        chapter = body.get('chapter') or 0
+        chapter = req.params.get('chapter') or 0
         return template.html(oid, uid, cid, chapter, money)
 
     def new(self, req, body=None):
