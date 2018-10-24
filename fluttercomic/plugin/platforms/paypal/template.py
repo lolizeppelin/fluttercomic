@@ -14,14 +14,14 @@ HTMLTEMPLATE = '''
         style: {size: 'responsive', 'label': 'buynow', 'size': 'responsive'},
         env: 'sandbox',
         payment: function(data, actions) {
-            return actions.request.post('/fluttercomic/orders/platform/paypal',
+            return actions.request.post('/n1.0/fluttercomic/orders/platform/paypal',
                 { 'money': %(money)d, 'uid': %(uid)d, 'oid': %(oid)d, 'cid': %(cid)d, 'chapter': %(chapter)d })
                 .then(function(res) {
                     return res.data[0].paypal.paymentID;
                 });
         },
         onAuthorize: function(data, actions) {
-            return actions.request.post('/fluttercomic/orders/callback/paypal/%(oid)d',
+            return actions.request.post('/n1.0/fluttercomic/orders/callback/paypal/%(oid)d',
                                         {
                                             paypal: {
                                                 paymentID: data.paymentID,
