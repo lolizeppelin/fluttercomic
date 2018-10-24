@@ -51,6 +51,7 @@ FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
 class PaypalRequest(PlatformsRequestBase):
 
     ADMINAPI = False
+    JSON = False
 
     def html(self, req, body=None):
         """生成订单页面html"""
@@ -63,6 +64,9 @@ class PaypalRequest(PlatformsRequestBase):
 
     def new(self, req, body=None):
         """发起订单"""
+        body = body or {}
+        if not isinstance(body, dict):
+            raise InvalidArgument('Http body not json or content type is not application/json')
         money = body.get('money')
         uid = body.get('uid')
         oid = body.get('oid')
@@ -95,6 +99,9 @@ class PaypalRequest(PlatformsRequestBase):
 
     def esure(self, req, oid, body=None):
         body = body or {}
+        if not isinstance(body, dict):
+            raise InvalidArgument('Http body not json or content type is not application/json')
+
         paypal = body.get('paypal')
         oid = body.get('oid')
         uid = body.get('uid')
