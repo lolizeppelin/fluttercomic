@@ -35,11 +35,10 @@ from fluttercomic.api import endpoint_session
 from fluttercomic.plugin.platforms.paypal import config
 
 CONF = cfg.CONF
+CONF.register_group(config.group)
+CONF.register_opts(config.paypal_opts, config.group)
 
 LOG = logging.getLogger(__name__)
-
-config.register_opts(cfg.OptGroup(name=config.NAME,
-                                  title='Fluttercomic Pay platform paypal'))
 
 paypalApi = PayPalApi(CONF[config.NAME])
 

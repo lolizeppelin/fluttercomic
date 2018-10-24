@@ -11,7 +11,7 @@ CONF = cfg.CONF
 
 class Routers(router.RoutersBase):
 
-    resource_name = 'fluttercomicplat'
+    resource_name = 'fluttercomicplatfrom'
 
     def append_routers(self, mapper, routers=None):
 
