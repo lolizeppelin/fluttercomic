@@ -20,6 +20,7 @@ from goperation import threadpool
 from goperation.manager.utils import resultutils
 
 from fluttercomic.api.wsgi.token import verify
+from fluttercomic.plugin.platforms.base import PlatformsRequestBase
 
 
 LOG = logging.getLogger(__name__)
@@ -31,12 +32,17 @@ FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
 
 
 @singleton.singleton
-class HuaweiRequest(MiddlewareContorller):
+class HuaweiRequest(PlatformsRequestBase):
 
     ADMINAPI = False
 
+    @verify()
+    def new(self, req, body=None):
+        """发起订单"""
+        raise NotImplementedError
 
-    def pay(self, req, oid, body=None):
-        """支付订单"""
+
+    def esure(self, req, oid, body=None):
+        raise NotImplementedError
 
 
