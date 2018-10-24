@@ -46,6 +46,17 @@ FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
              NoResultFound: webob.exc.HTTPNotFound,
              MultipleResultsFound: webob.exc.HTTPInternalServerError}
 
+#
+# HTMLCKECH = {
+#     'type': 'object',
+#     'required': ['money', 'uid'],
+#     'properties':
+#         {
+#             'timeout': {'type': 'integer', 'minimum': 5, 'maximun': 30},
+#             'fileinfo': FILEINFOSCHEMA,
+#          }
+# }
+
 
 @singleton.singleton
 class PaypalRequest(PlatformsRequestBase):
@@ -55,11 +66,22 @@ class PaypalRequest(PlatformsRequestBase):
 
     def html(self, req, body=None):
         """生成订单页面html"""
+        try:
+            money = int(req.params.get('money'))
+            uid = int(req.params.get('uid'))
+            cid = int(req.params.get('cid') or 0)
+            chapter = int(req.params.get('chapter') or 0)
+        except (ValueError, TypeError):
+            LOG.debug(str(req.params))
+            raise InvalidArgument('Some Value not int')
+
+        if money < 1:
+            raise InvalidArgument('Money less then 1')
+        if uid < 1:
+            raise InvalidArgument('Uid error')
+        if cid < 0 or chapter < 0:
+            raise InvalidArgument('cid or chapter less then 0')
         oid = uuidutils.Gkey()
-        money = req.params.get('money')
-        uid = req.params.get('uid')
-        cid = req.params.get('cid') or 0
-        chapter = req.params.get('chapter') or 0
         return template.html(oid, uid, cid, chapter, money)
 
     def new(self, req, body=None):
@@ -103,7 +125,6 @@ class PaypalRequest(PlatformsRequestBase):
             raise InvalidArgument('Http body not json or content type is not application/json')
 
         paypal = body.get('paypal')
-        oid = body.get('oid')
         uid = body.get('uid')
 
         session = endpoint_session()

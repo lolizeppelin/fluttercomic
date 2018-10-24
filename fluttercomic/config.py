@@ -13,3 +13,8 @@ def list_server_opts():
                               'fluttercomic.plugin.platforms.routers'])
     # return route_opts + resource_opts + database_opts
     return route_opts + comic_opts + platforms_opts + database_opts
+
+
+def list_paypal_opts():
+    from fluttercomic.plugin.platforms.paypal.config import paypal_opts
+    return paypal_opts

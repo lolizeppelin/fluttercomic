@@ -27,7 +27,6 @@ HTMLTEMPLATE = '''
                                                 paymentID: data.paymentID,
                                                 payerID:   data.payerID
                                             },
-                                            oid: %(oid)d
                                         }
             )
                 .then(function(res) {
