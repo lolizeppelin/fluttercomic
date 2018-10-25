@@ -11,6 +11,7 @@ from simpleutil.config import cfg
 from simpleutil.utils import argutils
 from simpleutil.utils import singleton
 from simpleutil.utils import uuidutils
+from simpleutil.utils import jsonutils
 
 from simpleutil.common.exceptions import InvalidArgument
 
@@ -46,16 +47,40 @@ FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
              NoResultFound: webob.exc.HTTPNotFound,
              MultipleResultsFound: webob.exc.HTTPInternalServerError}
 
-#
-# HTMLCKECH = {
-#     'type': 'object',
-#     'required': ['money', 'uid'],
-#     'properties':
-#         {
-#             'timeout': {'type': 'integer', 'minimum': 5, 'maximun': 30},
-#             'fileinfo': FILEINFOSCHEMA,
-#          }
-# }
+
+NEWPAYMENT = {
+    'type': 'object',
+    'required': ['money', 'uid', 'oid'],
+    'properties':
+        {
+            'money': {'type': 'integer', 'minimum': 1},
+            'uid': {'type': 'integer', 'minimum': 1},
+            'oid': {'type': 'string',
+                    'minLength': 19, 'maxLength': 19,
+                    'pattern': '^[^0]\d+$'
+                    },
+            'cid': {'type': 'integer', 'minimum': 0},
+            'chapter': {'type': 'integer', 'minimum': 0},
+         }
+}
+
+
+ESUREPAY = {
+    'type': 'object',
+    'required': ['paypal', 'uid'],
+    'properties':
+        {
+            'uid': {'type': 'integer', 'minimum': 1},
+            'paypal': {
+                'type': 'object',
+                'required': ['paymentID', 'payerID'],
+                'properties' : {
+                    'paymentID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
+                    'payerID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
+                }
+            },
+         }
+}
 
 
 @singleton.singleton
@@ -89,11 +114,18 @@ class PaypalRequest(PlatformsRequestBase):
         body = body or {}
         if not isinstance(body, dict):
             raise InvalidArgument('Http body not json or content type is not application/json')
+        jsonutils.schema_validate(body, NEWPAYMENT)
         money = body.get('money')
         uid = body.get('uid')
-        oid = body.get('oid')
+        oid = int(body.get('oid'))
         cid = body.get('cid')
         chapter = body.get('chapter')
+
+        now = int(time.time()*1000)
+        otime = uuidutils.Gprimarykey.timeformat(oid)
+        if (now - otime) > 60000 or otime < now:
+            raise InvalidArgument('Order id error')
+
         coin, gift = template.translate(money)
         session = endpoint_session()
         query = model_query(session, User, filter=User.uid == uid)
@@ -123,6 +155,14 @@ class PaypalRequest(PlatformsRequestBase):
         body = body or {}
         if not isinstance(body, dict):
             raise InvalidArgument('Http body not json or content type is not application/json')
+
+        oid = int(oid)
+        now = int(time.time()*1000)
+        otime = uuidutils.Gprimarykey.timeformat(oid)
+        if (now - otime) > 600000 or otime < now:
+            raise InvalidArgument('Order id error or more the 600s')
+
+        jsonutils.schema_validate(body, ESUREPAY)
 
         paypal = body.get('paypal')
         uid = body.get('uid')
@@ -155,6 +195,7 @@ class PaypalRequest(PlatformsRequestBase):
                 time=int(time.time()),
                 cid=order.cid,
                 chapter=order.chapter,
+                ext=None,
             )
             user.coins += order.coin
             user.gifts += order.gift

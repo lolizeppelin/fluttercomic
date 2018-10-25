@@ -176,7 +176,10 @@ class RechargeLog(TableBase):
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 完成时间
     cid = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)          # 订单发起时用户所看漫画
     chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所看章节
+    ext = sa.Column(BLOB, nullable=True)                                        # 扩展信息
+
     __table_args__ = (
+        sa.Index('type_platform', 'platform'),
         MyISAMTableBase.__table_args__
     )
 
