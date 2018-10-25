@@ -22,6 +22,7 @@ Requires:       python < 3.0
 Requires:       python-goperation >= 1.0
 Requires:       python-goperation < 1.1
 Requires:       ImageMagick >= 6.7
+Requires:       python-ndg_httpsclient >= 0.4.0
 
 
 %description

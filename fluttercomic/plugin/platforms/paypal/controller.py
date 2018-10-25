@@ -101,11 +101,11 @@ class PaypalRequest(PlatformsRequestBase):
             user = query.one()
             payment = paypalApi.payment(money)
             if payment.get('state') != 'created':
-                raise InvalidArgument('Create order fail')
+                raise InvalidArgument('Create order fail, call create payment error')
             order = Order(oid=oid, uid=uid,
                           money=money,
                           platform='paypal',
-                          serial=payment.get('paymentID'),
+                          serial=payment.get('id'),
                           time=int(time.time()),
                           cid=cid,
                           chapter=chapter,
@@ -139,7 +139,8 @@ class PaypalRequest(PlatformsRequestBase):
                 raise InvalidArgument('paymentID not the same')
             user = uquery.one()
             pay_result = paypalApi.execute(paypal, order.money)
-            if pay_result.get('state') == 'failed':
+            state = pay_result.get('state')
+            if state is None or state == 'failed':
                 raise InvalidArgument('Payment execute')
 
             recharge = RechargeLog(

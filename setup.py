@@ -40,6 +40,7 @@ setup(
                       'simpleservice<1.0',
                       'simpleflow>=1.0',
                       'simpleflow<1.1',
+                      'ndg_httpsclient>=0.4.0'
                       ),
     name='fluttercomic',
     version=__version__,
