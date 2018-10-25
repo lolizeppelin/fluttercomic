@@ -23,9 +23,6 @@ class PayPalApi(object):
 
     def payment(self, money):
 
-        LOG.info('client id %s' % self.conf.clientID)
-        LOG.info('secret %s' % self.conf.secret)
-
         url = self.PAYPALAPI + '/v1/payments/payment'
         data = dict(
             intent='sale',
