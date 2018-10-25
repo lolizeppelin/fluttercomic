@@ -123,7 +123,7 @@ class PaypalRequest(PlatformsRequestBase):
 
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
-        if (now - otime) > 60000 or otime < now:
+        if (now - otime) > 60000 or otime > now:
             raise InvalidArgument('Order id error')
 
         coin, gift = template.translate(money)
@@ -159,7 +159,7 @@ class PaypalRequest(PlatformsRequestBase):
         oid = int(oid)
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
-        if (now - otime) > 600000 or otime < now:
+        if (now - otime) > 600000 or otime > now:
             raise InvalidArgument('Order id error or more the 600s')
 
         jsonutils.schema_validate(body, ESUREPAY)
