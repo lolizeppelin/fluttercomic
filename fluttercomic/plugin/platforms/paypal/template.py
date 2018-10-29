@@ -34,6 +34,12 @@ HTMLTEMPLATE = '''
                     window.postMessage(JSON.stringify({paypal: { paymentID: data.paymentID, payerID: data.payerID}, oid: %(oid)d}))
                     // 3. Show the buyer a confirmation message.
                 });
+        },
+        onCancel: function(data, actions) {
+            window.postMessage(JSON.stringify({result: 'cancel!!!!!!!!!!!!!!'}))
+        },
+        onError: function (err) {
+           window.postMessage(JSON.stringify({result: 'die!!!!!!!!!!!!!!!'}))
         }
     }, '#paypal-button');
 </script>
