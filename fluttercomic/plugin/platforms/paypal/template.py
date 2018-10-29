@@ -31,7 +31,7 @@ HTMLTEMPLATE = '''
                     json: {paypal: { paymentID: data.paymentID, payerID: data.payerID}, uid: %(uid)d},
                 })
                 .then(function (res) {
-                    window.postMessage(JSON.stringify({paypal: { paymentID: data.paymentID, payerID: data.payerID}, oid: %(oid)d})
+                    window.postMessage(JSON.stringify({paypal: { paymentID: data.paymentID, payerID: data.payerID}, oid: %(oid)d}))
                     // 3. Show the buyer a confirmation message.
                 });
         }
