@@ -302,7 +302,7 @@ class ComicRequest(MiddlewareContorller):
             point = common.MAXCHAPTERS
         #  已登陆,token经过校验
         elif uid:
-            query = model_query(session, UserOwn.chapters, filter=and_(UserOwn.uid == uid, UserOwn.cid == cid))
+            query = model_query(session, UserOwn.chapter, filter=and_(UserOwn.uid == uid, UserOwn.cid == cid))
             owns = query.one_or_none()
             if owns:
                 chapter = owns.chapter
