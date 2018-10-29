@@ -38,8 +38,10 @@ class PayPalApi(object):
         return jsonutils.loads_as_bytes(resp.text)
 
     def execute(self, paypal, money):
-        url = self.PAYPALAPI + '/v1/payments/payment' + '/%s/execute ' % paypal.get('paymentID')
-        data = dict(payer_id=paypal.get('payerID'))
+        url = self.PAYPALAPI + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
+        data = dict(payer_id=paypal.get('payerID'),
+                    transactions=[dict(amount=dict(total=money, currency='USD'))],
+                    )
         resp = self.session.post(url, auth=self.auth, json=data, headers={"Content-Type": "application/json"},
                                  timeout=10)
         LOG.info(resp.text)

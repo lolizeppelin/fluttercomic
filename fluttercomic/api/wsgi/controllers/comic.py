@@ -294,7 +294,7 @@ class ComicRequest(MiddlewareContorller):
         comic = query.one()
         if comic.status < 0:
             raise exceptions.ComicError('Comic status error')
-        chapters = None
+        chapter = 0
         point = comic.point
         uid, mid = online(req)
         # 管理员
@@ -305,7 +305,7 @@ class ComicRequest(MiddlewareContorller):
             query = model_query(session, UserOwn.chapters, filter=and_(UserOwn.uid == uid, UserOwn.cid == cid))
             owns = query.one_or_none()
             if owns:
-                chapters = owns.chapters
+                chapter = owns.chapter
         elif comic.status == common.HIDE:
             raise exceptions.ComicError('Comic status error')
         return resultutils.results(result='show comic success',
@@ -318,7 +318,7 @@ class ComicRequest(MiddlewareContorller):
                                               last=comic.last,
                                               lastup=comic.lastup,
                                               ext=comic.ext,
-                                              chapters=format_chapters(point, comic.chapters, chapters))])
+                                              chapters=format_chapters(point, comic.chapters, chapter))])
 
     @verify(vtype=M)
     def update(self, req, cid, body=None):
@@ -405,8 +405,9 @@ class ComicRequest(MiddlewareContorller):
         uquery = session.query(User).filter(User.uid == uid).with_for_update(nowait=True)
         oquery = model_query(session, UserOwn, filter=and_(UserOwn.uid == uid, UserOwn.cid == cid))
         comic = query.one()
+
         with session.begin():
-            if comic.point >= chapter:
+            if comic.point< 0 or comic.point >= chapter:
                 raise InvalidArgument('Do not buy free chaper')
             if comic.last < chapter:
                 raise InvalidArgument('Do not buy not exist chaper')
@@ -423,25 +424,35 @@ class ComicRequest(MiddlewareContorller):
                 gift = 0
                 coin = common.ONECHAPTER
 
-            paylog = UserPayLog(uid=uid, cid=cid, chapter=chapter,
-                                value=common.ONECHAPTER,
-                                coin=coin, gift=gift,
-                                coins=coins, gifts=gifts,
-                                time=int(time.time()))
-            session.add(paylog)
-            session.flush()
-            user.coins = coins - coin
-            user.gifts = gifts - gift
             owns = oquery.one_or_none()
             if not owns:
-                owns = UserOwn(uid=uid, cid=cid, ext=comic.ext, chapters=msgpack.packb([chapter, ]))
+                owns = UserOwn(uid=uid, cid=cid, ext=comic.ext, chapter=chapter)
                 session.add(owns)
                 session.flush()
             else:
-                chapters = msgpack.unpackb(owns.chapters)
-                chapters.append(chapter)
-                owns.chapters = msgpack.packb(chapters)
+                if owns.chapter >= chapter:
+                    return resultutils.results(result='get chapter success, buy fail',
+                                               data=[dict(cid=comic.cid,
+                                                          name=comic.name,
+                                                          author=comic.author,
+                                                          type=comic.type,
+                                                          ext=comic.ext,
+                                                          chapters=format_chapters(comic.point,
+                                                                                   comic.chapters, owns.chapter))])
+                if owns.chapter + 1 != chapter:     # 不允许跳章节购买
+                    raise InvalidArgument('buy chapter fail, you need buy chapter %d first' % (owns.chapter + 1))
+                owns.chapter = chapter
                 session.flush()
+                paylog = UserPayLog(uid=uid, cid=cid, chapter=chapter,
+                                    value=common.ONECHAPTER,
+                                    coin=coin, gift=gift,
+                                    coins=coins, gifts=gifts,
+                                    time=int(time.time()))
+                session.add(paylog)
+                session.flush()
+                user.coins = coins - coin
+                user.gifts = gifts - gift
+
 
         return resultutils.results(result='buy chapter success',
                                    data=[dict(cid=comic.cid,
@@ -451,7 +462,7 @@ class ComicRequest(MiddlewareContorller):
                                               ext=comic.ext,
                                               chapters=format_chapters(comic.point,
                                                                        comic.chapters,
-                                                                       owns.chapters))])
+                                                                       owns.chapter))])
 
     @verify()
     def mark(self, req, cid, uid, body=None):

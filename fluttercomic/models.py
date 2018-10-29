@@ -111,7 +111,7 @@ class UserOwn(TableBase):
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
     ext = sa.Column(VARCHAR(4), nullable=False)                                 # 图片类型
-    chapters = sa.Column(BLOB, nullable=False, default=EMPTYLIST)               # 拥有章节
+    chapter = sa.Column(INTEGER(unsigned=True), nullable=False)                 # 拥有章节
 
     __table_args__ = (
         InnoDBTableBase.__table_args__
@@ -152,7 +152,7 @@ class Order(TableBase):
     serial = sa.Column(VARCHAR(128), nullable=True)                             # 流水号
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单时间
     cid = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)          # 订单发起时用户所看漫画
-    chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所看章节
+    chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所需购买章节
     ext = sa.Column(BLOB, nullable=True)                                        # 扩展信息
 
     __table_args__ = (
@@ -175,7 +175,7 @@ class RechargeLog(TableBase):
     platform = sa.Column(VARCHAR(32), nullable=True)                            # 订单类型平台
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 完成时间
     cid = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)          # 订单发起时用户所看漫画
-    chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所看章节
+    chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所需购买章节
     ext = sa.Column(BLOB, nullable=True)                                        # 扩展信息
 
     __table_args__ = (
