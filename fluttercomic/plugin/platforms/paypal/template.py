@@ -18,7 +18,7 @@ HTMLTEMPLATE = '''
             return actions.request({
                     method: "post",
                     url: '/n1.0/fluttercomic/orders/platforms/paypal',
-                    json: {money: %(money)d, uid: %(uid)d, oid: '%(oid)d', cid: %(cid)d, chapter: %(chapter)d, url: %(url)s},
+                    json: {money: %(money)d, uid: %(uid)d, oid: '%(oid)d', cid: %(cid)d, chapter: %(chapter)d, url: '%(url)s'},
                 })
                 .then(function (res) {
                     return res.data[0].paypal.paymentID;

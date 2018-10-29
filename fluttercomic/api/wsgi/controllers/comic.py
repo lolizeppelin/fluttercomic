@@ -407,7 +407,7 @@ class ComicRequest(MiddlewareContorller):
         comic = query.one()
 
         with session.begin():
-            if comic.point< 0 or comic.point >= chapter:
+            if comic.point< 0 or comic.point > chapter:
                 raise InvalidArgument('Do not buy free chaper')
             if comic.last < chapter:
                 raise InvalidArgument('Do not buy not exist chaper')
