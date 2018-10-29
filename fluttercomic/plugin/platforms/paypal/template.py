@@ -18,7 +18,7 @@ HTMLTEMPLATE = '''
             return actions.request({
                     method: "post",
                     url: '/n1.0/fluttercomic/orders/platforms/paypal',
-                    json: {money: %(money)d, uid: %(uid)d, oid: '%(oid)d', cid: %(cid)d, chapter: %(chapter)d},
+                    json: {money: %(money)d, uid: %(uid)d, oid: '%(oid)d', cid: %(cid)d, chapter: %(chapter)d, url: %(url)s},
                 })
                 .then(function (res) {
                     return res.data[0].paypal.paymentID;
@@ -46,11 +46,11 @@ HTMLTEMPLATE = '''
 '''
 
 
-def html(oid, uid, cid, chapter, money):
+def html(oid, uid, cid, chapter, money, url):
     # Javascript json oid error
     buf = HTMLTEMPLATE % {'oid': oid,
                           'uid': uid, 'money': money,
-                          'cid': cid, 'chapter': chapter}
+                          'cid': cid, 'chapter': chapter, 'url': url}
     return encodeutils.safe_decode(buf, 'utf-8')
 
 def translate(money):

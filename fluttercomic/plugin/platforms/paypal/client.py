@@ -21,7 +21,7 @@ class PayPalApi(object):
         self.session = session
         self.conf = conf
 
-    def payment(self, money):
+    def payment(self, money, cancel):
 
         url = self.PAYPALAPI + '/v1/payments/payment'
         data = dict(
@@ -29,7 +29,7 @@ class PayPalApi(object):
             payer={'payment_method': 'paypal'},
             transactions=[dict(amount=dict(total=money, currency='USD'))],
             redirect_urls={"return_url": "http://www.163.com",
-                           "cancel_url": "https://www.baidu.com"}
+                           "cancel_url": cancel}
         )
         resp = self.session.post(url, auth=self.auth, json=data,
                                  headers={"Content-Type": "application/json"},

@@ -50,7 +50,7 @@ FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
 
 NEWPAYMENT = {
     'type': 'object',
-    'required': ['money', 'uid', 'oid'],
+    'required': ['money', 'uid', 'oid', 'url'],
     'properties':
         {
             'money': {'type': 'integer', 'minimum': 1},
@@ -61,7 +61,9 @@ NEWPAYMENT = {
                     },
             'cid': {'type': 'integer', 'minimum': 0},
             'chapter': {'type': 'integer', 'minimum': 0},
+            'url': {'type': 'string', 'format': 'uri', 'pattern': "^(https?|wss?|ftp)://"},
          }
+
 }
 
 
@@ -106,8 +108,9 @@ class PaypalRequest(PlatformsRequestBase):
             raise InvalidArgument('Uid error')
         if cid < 0 or chapter < 0:
             raise InvalidArgument('cid or chapter less then 0')
+        url = req.url
         oid = uuidutils.Gkey()
-        return template.html(oid, uid, cid, chapter, money)
+        return template.html(oid, uid, cid, chapter, money, url)
 
     def new(self, req, body=None):
         """发起订单"""
@@ -120,6 +123,7 @@ class PaypalRequest(PlatformsRequestBase):
         oid = int(body.get('oid'))
         cid = body.get('cid')
         chapter = body.get('chapter')
+        cancel_url = body.get('url')
 
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
@@ -131,7 +135,7 @@ class PaypalRequest(PlatformsRequestBase):
         query = model_query(session, User, filter=User.uid == uid)
         with session.begin():
             user = query.one()
-            payment = paypalApi.payment(money)
+            payment = paypalApi.payment(money, cancel_url)
             if payment.get('state') != 'created':
                 raise InvalidArgument('Create order fail, call create payment error')
             order = Order(oid=oid, uid=uid,
