@@ -31,15 +31,16 @@ HTMLTEMPLATE = '''
                     json: {paypal: { paymentID: data.paymentID, payerID: data.payerID}, uid: %(uid)d},
                 })
                 .then(function (res) {
-                    window.postMessage(JSON.stringify({paypal: { paymentID: data.paymentID, payerID: data.payerID}, oid: %(oid)d}))
+                    window.postMessage(JSON.stringify({success: true, coins: res.data[0].coins,
+                    paypal: { paymentID: data.paymentID, payerID: data.payerID}, oid: %(oid)d}));
                     // 3. Show the buyer a confirmation message.
                 });
         },
         onCancel: function(data, actions) {
-            window.postMessage(JSON.stringify({result: 'cancel!!!!!!!!!!!!!!'}))
+            window.postMessage(JSON.stringify({success: false, result: 'paypal has been cancel'}));
         },
         onError: function (err) {
-           window.postMessage(JSON.stringify({result: 'die!!!!!!!!!!!!!!!'}))
+           window.postMessage(JSON.stringify({success: false, result: 'paypal catch error'}));
         }
     }, '#paypal-button');
 </script>
