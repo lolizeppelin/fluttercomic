@@ -109,7 +109,8 @@ class UserRequest(MiddlewareContorller):
             return resultutils.results(result='user name duplicate', resultcode=manager_common.RESULT_ERROR)
         token = TokenProvider.create(req, dict(uid=user.uid, name=user.name), 3600)
         return resultutils.results(result='crate user success',
-                                   data=[dict(token=token, uid=user.uid, name=user.name)])
+                                   data=[dict(token=token, uid=user.uid, name=user.name,
+                                              coins=(user.coins + user.gifts))])
 
     @verify(vtype=M)
     def show(self, req, uid, body=None):
