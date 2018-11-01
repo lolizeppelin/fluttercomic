@@ -31,9 +31,9 @@ HTMLTEMPLATE = '''
                     json: {paypal: { paymentID: data.paymentID, payerID: data.payerID}, uid: %(uid)d},
                 })
                 .then(function (res) {
-                    window.postMessage(JSON.stringify({success: true, coins: res.data[0].coins,
-                    paypal: { paymentID: data.paymentID, payerID: data.payerID}, oid: %(oid)d}));
-                    // 3. Show the buyer a confirmation message.
+                    window.postMessage(JSON.stringify({result: 'paypal pay success', success: true,
+                    coins: res.data[0].coins, paypal: { paymentID: data.paymentID, payerID: data.payerID},
+                    oid: %(oid)d}));
                 });
         },
         onCancel: function(data, actions) {
