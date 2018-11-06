@@ -106,9 +106,9 @@
 # paypal secret (string value)
 #secret = <None>
 
-# paypal is sandbox api, just for test (boolean value)
+# paypal is sandbox api, just for send to paypal sandbox (boolean value)
 #sandbox = true
 
-# money scale, do not change this value if you don not what for (floating point
-# value)
-#scale = 1.0
+# money rate of exchange, do not change this value if you don not what for
+# (floating point value)
+#roe = 1.0
