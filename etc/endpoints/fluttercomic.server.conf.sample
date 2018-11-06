@@ -105,3 +105,10 @@
 
 # paypal secret (string value)
 #secret = <None>
+
+# paypal is sandbox api, just for test (boolean value)
+#sandbox = true
+
+# money scale, do not change this value if you don not what for (floating point
+# value)
+#scale = 1.0

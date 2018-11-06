@@ -66,6 +66,7 @@ class PayPalApi(object):
         self.auth = HTTPBasicAuth(username=conf.clientID, password=conf.secret)
         self.session = session
         self.conf = conf
+        self.scale = conf.scale
 
     @property
     def sandbox(self):
@@ -74,11 +75,11 @@ class PayPalApi(object):
     def html(self, **kwargs):
         _kwargs = copy.copy(kwargs)
         _kwargs.update({'env': 'sandbox' if self.conf.sandbox else 'production'})
-        buf = HTMLTEMPLATE % kwargs
+        buf = HTMLTEMPLATE % _kwargs
         return encodeutils.safe_decode(buf, 'utf-8')
 
     def payment(self, money, cancel):
-        money = money/100.0 if self.conf.sandbox else money
+        money = money/self.scale
         url = self.PAYPALAPI + '/v1/payments/payment'
         data = dict(
             intent='sale',
@@ -94,7 +95,7 @@ class PayPalApi(object):
         return jsonutils.loads_as_bytes(resp.text)
 
     def execute(self, paypal, money):
-        money = money/100.0 if self.conf.sandbox else money
+        money = money/self.scale
         url = self.PAYPALAPI + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
         data = dict(payer_id=paypal.get('payerID'),
                     transactions=[dict(amount=dict(total=money, currency='USD'))],

@@ -17,7 +17,10 @@ paypal_opts = [
                help='paypal secret'),
     cfg.BoolOpt('sandbox',
                 default=True,
-                help='paypal is sandbox api, just for test'),
+                help='paypal is sandbox api, just for send to paypal sandbox'),
+    cfg.FloatOpt('scale',
+                default=1.0,
+                help='money scale, do not change this value if you don not what for'),
 ]
 
 
