@@ -18,9 +18,9 @@ paypal_opts = [
     cfg.BoolOpt('sandbox',
                 default=True,
                 help='paypal is sandbox api, just for send to paypal sandbox'),
-    cfg.FloatOpt('scale',
+    cfg.FloatOpt('roe',
                 default=1.0,
-                help='money scale, do not change this value if you don not what for'),
+                help='money rate of exchange, do not change this value if you don not what for'),
 ]
 
 

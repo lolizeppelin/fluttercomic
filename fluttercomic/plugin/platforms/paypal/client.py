@@ -66,7 +66,7 @@ class PayPalApi(object):
         self.auth = HTTPBasicAuth(username=conf.clientID, password=conf.secret)
         self.session = session
         self.conf = conf
-        self.scale = conf.scale
+        self.roe = conf.roe
 
     @property
     def sandbox(self):
@@ -79,7 +79,7 @@ class PayPalApi(object):
         return encodeutils.safe_decode(buf, 'utf-8')
 
     def payment(self, money, cancel):
-        money = money/self.scale
+        money = money/self.roe
         url = self.PAYPALAPI + '/v1/payments/payment'
         data = dict(
             intent='sale',
@@ -95,7 +95,7 @@ class PayPalApi(object):
         return jsonutils.loads_as_bytes(resp.text)
 
     def execute(self, paypal, money):
-        money = money/self.scale
+        money = money/self.roe
         url = self.PAYPALAPI + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
         data = dict(payer_id=paypal.get('payerID'),
                     transactions=[dict(amount=dict(total=money, currency='USD'))],
