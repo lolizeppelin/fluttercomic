@@ -56,8 +56,8 @@ HTMLTEMPLATE = '''
 
 class PayPalApi(object):
 
-
-    PAYPALAPI = 'https://api.sandbox.paypal.com'
+    API = 'https://api.paypal.com'
+    SANDBOXAPI = 'https://api.sandbox.paypal.com'
 
     def __init__(self, conf):
         session = sessions.Session()
@@ -67,6 +67,7 @@ class PayPalApi(object):
         self.session = session
         self.conf = conf
         self.roe = conf.roe
+        self.api = self.SANDBOXAPI if conf.sandbox else self.API
 
     @property
     def sandbox(self):
@@ -79,8 +80,8 @@ class PayPalApi(object):
         return encodeutils.safe_decode(buf, 'utf-8')
 
     def payment(self, money, cancel):
-        money = '.2f' % money*self.roe
-        url = self.PAYPALAPI + '/v1/payments/payment'
+        money = '%.2f' % (money*self.roe)
+        url = self.api + '/v1/payments/payment'
         data = dict(
             intent='sale',
             payer={'payment_method': 'paypal'},
@@ -95,8 +96,8 @@ class PayPalApi(object):
         return jsonutils.loads_as_bytes(resp.text)
 
     def execute(self, paypal, money):
-        money = '.2f' % money*self.roe
-        url = self.PAYPALAPI + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
+        money = '%.2f' % (money*self.roe)
+        url = self.api + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
         data = dict(payer_id=paypal.get('payerID'),
                     transactions=[dict(amount=dict(total=money, currency='USD'))],
                     )
