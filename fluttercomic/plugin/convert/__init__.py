@@ -18,9 +18,11 @@ def convert_cover(target, rename='main.webp', size='1600x1200', maxsize=250000, 
     systemutils.subwait(sub)
 
 
-def convert_chapter(dst, key, ext='webp', size='1200x900', maxsize=250000, logfile=None):
+def convert_chapter(dst, key, strict=True, ext='webp', size='1200x900', maxsize=250000, logfile=None):
     # call convert
     args = [CONVERT, '--target', dst, '-e', ext, '-s', size, '-m', str(maxsize), '-k', key, '-o', '3600']
+    if not strict:
+        args.append('--nostrict')
     if logfile:
         args.extend(['--log-file', logfile, '--loglevel', 'info'])
         with open(logfile, 'w') as f:

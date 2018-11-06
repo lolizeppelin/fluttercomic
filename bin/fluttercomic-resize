@@ -68,7 +68,10 @@ command_opts = [
     cfg.StrOpt('ext',
                short='e',
                default='webp',
-               help='img type file ext')
+               help='img type file ext'),
+    cfg.BoolOpt('strict',
+                default=True,
+                help='exit conver when a file not img file')
 ]
 
 
@@ -78,7 +81,7 @@ def getfiles(path):
 
     for root, dirs, files in os.walk(path, topdown=True):
     # for index, fname in enumerate(os.listdir(path)):
-        for dir in dirs:
+        if dirs:
             raise ValueError('%s Has folder %s' % (root, dir))
         for fname in files:
             # 提取文件名中的数字
@@ -199,8 +202,22 @@ def main():
 
     if os.path.isdir(path):
         LOG.info('Convert path %s' % CONF.target)
+        for root, dirs, files in os.walk(path, topdown=True):
+            if dirs:
+                LOG.error('%s Has folder %s' % (root, dir))
+                sys.exit(1)
+            for filename in files:
+                if not is_pic(os.path.join(path, filename)):
+                    if CONF.strict:
+                        LOG.error('Strict mode, %s not img file, exit process' % filename)
+                        sys.exit(1)
+                    LOG.warning('%s not image file, delete it' % filename)
+                    os.remove(os.path.join(path, filename))
         files = getfiles(path)
     else:
+        if not is_pic(path):
+            LOG.error('%s not image file' % path)
+            sys.exit(1)
         LOG.info('Convert file %s' % CONF.target)
         path, fname = os.path.split(path)
         files = [FILENAME(fname, CONF.rename, [])]
@@ -208,11 +225,6 @@ def main():
     if path in ('', '/'):
         LOG.error('Target path value error')
         sys.exit(1)
-
-    for imgfile in files:
-        if not is_pic(os.path.join(path, imgfile.name)):
-            LOG.error('%s not image file' % imgfile.name)
-            sys.exit(1)
 
     errors = []
     for imgfile in files:

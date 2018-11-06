@@ -1,3 +1,4 @@
+import copy
 from requests import sessions
 from requests.auth import HTTPBasicAuth
 from requests.adapters import HTTPAdapter
@@ -5,7 +6,53 @@ from requests.adapters import HTTPAdapter
 from simpleutil.log import log as logging
 from simpleutil.utils import jsonutils
 
+from simpleutil.utils import encodeutils
+
 LOG = logging.getLogger(__name__)
+
+
+HTMLTEMPLATE = '''
+<script src="https://www.paypalobjects.com/api/checkout.js"></script>
+
+<div id="paypal-button"></div>
+
+<script>
+
+    paypal.Button.render({
+        style: {'label': 'buynow', 'size': 'responsive'},
+        env: '%(env)s',
+        payment: function (data, actions) {
+            return actions.request({
+                    method: "post",
+                    url: '/n1.0/fluttercomic/orders/platforms/paypal',
+                    json: {money: %(money)d, uid: %(uid)d, oid: '%(oid)d', cid: %(cid)d, chapter: %(chapter)d, url: '%(url)s'},
+                })
+                .then(function (res) {
+                    return res.data[0].paypal.paymentID;
+                });
+        },
+        onAuthorize: function (data, actions) {
+            return actions.request({
+                    method: "post",
+                    url: '/n1.0/fluttercomic/orders/callback/paypal/%(oid)d',
+                    json: {paypal: { paymentID: data.paymentID, payerID: data.payerID}, uid: %(uid)d},
+                })
+                .then(function (res) {
+                    window.postMessage(JSON.stringify({result: 'paypal pay success', success: true,
+                    coins: res.data[0].coins, paypal: { paymentID: data.paymentID, payerID: data.payerID},
+                    oid: %(oid)d}));
+                });
+        },
+        onCancel: function(data, actions) {
+            window.postMessage(JSON.stringify({success: false, result: 'paypal has been cancel'}));
+        },
+        onError: function (err) {
+           window.postMessage(JSON.stringify({success: false, result: 'paypal catch error'}));
+        }
+    }, '#paypal-button');
+</script>
+'''
+
 
 class PayPalApi(object):
 
@@ -17,12 +64,21 @@ class PayPalApi(object):
         session.mount('http', HTTPAdapter(pool_maxsize=25))
         session.mount('https', HTTPAdapter(pool_maxsize=25))
         self.auth = HTTPBasicAuth(username=conf.clientID, password=conf.secret)
-        # self.auth = dict(username=conf.clientID, password=conf.secret)
         self.session = session
         self.conf = conf
 
-    def payment(self, money, cancel):
+    @property
+    def sandbox(self):
+        return self.conf.sandbox
 
+    def html(self, **kwargs):
+        _kwargs = copy.copy(kwargs)
+        _kwargs.update({'env': 'sandbox' if self.conf.sandbox else 'production'})
+        buf = HTMLTEMPLATE % kwargs
+        return encodeutils.safe_decode(buf, 'utf-8')
+
+    def payment(self, money, cancel):
+        money = money/100.0 if self.conf.sandbox else money
         url = self.PAYPALAPI + '/v1/payments/payment'
         data = dict(
             intent='sale',
@@ -38,11 +94,15 @@ class PayPalApi(object):
         return jsonutils.loads_as_bytes(resp.text)
 
     def execute(self, paypal, money):
+        money = money/100.0 if self.conf.sandbox else money
         url = self.PAYPALAPI + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
         data = dict(payer_id=paypal.get('payerID'),
                     transactions=[dict(amount=dict(total=money, currency='USD'))],
                     )
-        resp = self.session.post(url, auth=self.auth, json=data, headers={"Content-Type": "application/json"},
-                                 timeout=10)
+        resp = self.session.post(url, auth=self.auth, json=data,
+                                 headers={"Content-Type": "application/json"}, timeout=10)
         LOG.info(resp.text)
         return jsonutils.loads_as_bytes(resp.text)
+
+    def translate(self, money):
+        return (0, money*10) if self.conf.sandbox else (money*10, 0)

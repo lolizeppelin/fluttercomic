@@ -24,7 +24,6 @@ from goperation.manager.utils import resultutils
 
 from fluttercomic.api.wsgi.token import verify
 from fluttercomic.plugin.platforms.base import PlatformsRequestBase
-from fluttercomic.plugin.platforms.paypal import template
 from fluttercomic.plugin.platforms.paypal.client import PayPalApi
 
 from fluttercomic.models import Order
@@ -110,7 +109,7 @@ class PaypalRequest(PlatformsRequestBase):
             raise InvalidArgument('cid or chapter less then 0')
         url = req.url
         oid = uuidutils.Gkey()
-        return template.html(oid, uid, cid, chapter, money, url)
+        return paypalApi.html(oid=oid, uid=uid, cid=cid, chapter=chapter, money=money, url=url)
 
     def new(self, req, body=None):
         """发起订单"""
@@ -130,7 +129,7 @@ class PaypalRequest(PlatformsRequestBase):
         if (now - otime) > 60000 or otime > now:
             raise InvalidArgument('Order id error')
 
-        coin, gift = template.translate(money)
+        coin, gift = paypalApi.translate(money)
         session = endpoint_session()
         query = model_query(session, User, filter=User.uid == uid)
         with session.begin():
@@ -139,6 +138,7 @@ class PaypalRequest(PlatformsRequestBase):
             if payment.get('state') != 'created':
                 raise InvalidArgument('Create order fail, call create payment error')
             order = Order(oid=oid, uid=uid,
+                          sandbox=paypalApi.sandbox,
                           money=money,
                           platform='paypal',
                           serial=payment.get('id'),
@@ -199,6 +199,7 @@ class PaypalRequest(PlatformsRequestBase):
                 time=int(time.time()),
                 cid=order.cid,
                 chapter=order.chapter,
+                sandbox=paypalApi.sandbox,
                 ext=None,
             )
             user.coins += order.coin

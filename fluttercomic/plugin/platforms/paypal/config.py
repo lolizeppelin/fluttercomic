@@ -11,8 +11,13 @@ NAME = '%s.paypal' % common.NAME
 group = cfg.OptGroup(name=NAME, title='Fluttercomic Pay platform paypal')
 
 paypal_opts = [
-    cfg.StrOpt('clientID', help='paypal clientID'),
-    cfg.StrOpt('secret', help='paypal secret'),
+    cfg.StrOpt('clientID',
+               help='paypal clientID'),
+    cfg.StrOpt('secret',
+               help='paypal secret'),
+    cfg.BoolOpt('sandbox',
+                default=True,
+                help='paypal is sandbox api, just for test'),
 ]
 
 

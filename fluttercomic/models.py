@@ -11,6 +11,7 @@ from sqlalchemy.dialects.mysql import SMALLINT
 from sqlalchemy.dialects.mysql import INTEGER
 from sqlalchemy.dialects.mysql import CHAR
 from sqlalchemy.dialects.mysql import BLOB
+from sqlalchemy.dialects.mysql import BOOLEAN
 
 from simpleservice.ormdb.models import TableBase
 from simpleservice.ormdb.models import InnoDBTableBase
@@ -142,6 +143,7 @@ class Order(TableBase):
     """预备订单"""
     oid = sa.Column(BIGINT(unsigned=True), nullable=False,
                     default=uuidutils.Gkey, primary_key=True)                   # 订单ID
+    sandbox = sa.Column(BOOLEAN, nullable=False)                                # 沙箱订单
     uid = sa.Column(INTEGER(unsigned=True), nullable=False)                     # 用户id
     coins = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 订单发起时用户coins(不加锁,有可能不准)
     gifts = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 订单发起时用户gifts(不加锁,有可能不准)
@@ -166,6 +168,7 @@ class RechargeLog(TableBase):
     """成功充值票据"""
     oid = sa.Column(BIGINT(unsigned=True), nullable=False,
                     primary_key=True)                                           # 订单ID
+    sandbox = sa.Column(BOOLEAN, nullable=False)                                # 沙箱订单
     uid = sa.Column(INTEGER(unsigned=True), nullable=False)                     # 用户id
     coins = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 完成充值前用户coins(加锁,准确)
     gifts = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 完成充值前用户gifts(加锁,准确)

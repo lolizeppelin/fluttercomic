@@ -115,7 +115,8 @@ NEWCHAPTER = {
     'properties':
         {
              'impl': {'oneOf': [WEBSOCKETUPLOAD, SPIDERUPLOAD, LOCAL]},
-             'timeout': {'type': 'integer', 'minimum': 30, 'maximun': 1200},                   # pagen number
+             'timeout': {'type': 'integer', 'minimum': 30, 'maximun': 1200},
+             'strict': {'type': 'boolean', 'description': '是否严格模式, 非严格模式直接跳过不是图片的文件'},
          }
 }
 
@@ -238,14 +239,14 @@ class ComicRequest(MiddlewareContorller):
         LOG.info('extract chapter file success')
         return count
 
-    def _convert_new_chapter(self, src, cid, ext, chapter, key, logfile):
+    def _convert_new_chapter(self, src, cid, ext, chapter, key, logfile, strict=True):
         chapter_path = self.chapter_path(cid, chapter)
         if os.path.isdir(src):
             count = self._convert_new_chapter_from_dir(src, chapter_path)
         else:
             count = self._convert_new_chapter_from_file(src, chapter_path)
         _key ='%d%s' % (cid, key)
-        convert.convert_chapter(dst=chapter_path, ext=ext, key=_key, logfile=logfile)
+        convert.convert_chapter(dst=chapter_path, ext=ext, key=_key, logfile=logfile, strict=strict)
         LOG.info('convert chapter path finish')
         return count
 
@@ -504,6 +505,7 @@ class ComicRequest(MiddlewareContorller):
         jsonutils.schema_validate(body, NEWCHAPTER)
         impl = body.get('impl')
         timeout = body.get('timeout')
+        strict = body.get('strict', True)
         logfile = os.path.join(self.logdir, '%d.chapter.%d.%d.log' %
                                (int(time.time()), cid, chapter))
         comic_path = self.comic_path(cid)
@@ -528,7 +530,7 @@ class ComicRequest(MiddlewareContorller):
                 LOG.info('Try convert new chapter %d.%d from file:%s, type:%s' % (cid, chapter, tmpfile, ext))
                 # checket chapter file
                 try:
-                    count = self._convert_new_chapter(tmpfile, cid, ext, chapter, key, logfile)
+                    count = self._convert_new_chapter(tmpfile, cid, ext, chapter, key, logfile, strict)
                 except Exception as e:
                     LOG.error('convert new chapter from websocket upload file fail')
                     self._unfinish(cid, chapter)
@@ -553,7 +555,7 @@ class ComicRequest(MiddlewareContorller):
             def _local_func():
                 LOG.info('Try convert new chapter %d.%d from path:%s, type:%s' % (cid, chapter, path, ext))
                 try:
-                    count = self._convert_new_chapter(path, cid, ext, chapter, key, logfile)
+                    count = self._convert_new_chapter(path, cid, ext, chapter, key, logfile, strict)
                 except Exception as e:
                     LOG.error('convert new chapter from local dir %s fail, %s' % (path, e.__class__.__name__))
                     if LOG.isEnabledFor(logging.DEBUG):
