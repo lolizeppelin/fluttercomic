@@ -67,6 +67,7 @@ class PayPalApi(object):
         self.session = session
         self.conf = conf
         self.roe = conf.roe
+        LOG.info('PayPal roe is %f' % self.roe)
         self.api = self.SANDBOXAPI if conf.sandbox else self.API
 
     @property
@@ -107,4 +108,4 @@ class PayPalApi(object):
         return jsonutils.loads_as_bytes(resp.text)
 
     def translate(self, money):
-        return (0, money*10) if self.conf.sandbox else (money*10, 0)
+        return (0, money*self.conf.scale) if self.conf.sandbox else (money*self.conf.scale, 0)

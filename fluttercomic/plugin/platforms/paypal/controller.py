@@ -189,6 +189,7 @@ class PaypalRequest(PlatformsRequestBase):
 
             recharge = RechargeLog(
                 oid=order.oid,
+                sandbox=paypalApi.sandbox,
                 uid=uid,
                 coins=user.coins,
                 gifts=user.gifts,
@@ -199,7 +200,7 @@ class PaypalRequest(PlatformsRequestBase):
                 time=int(time.time()),
                 cid=order.cid,
                 chapter=order.chapter,
-                sandbox=paypalApi.sandbox,
+                serial=order.serial,
                 ext=None,
             )
             user.coins += order.coin

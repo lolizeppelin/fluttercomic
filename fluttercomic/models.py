@@ -89,9 +89,8 @@ class Comic(TableBase):
 
 class UserBook(TableBase):
     """用户收藏书架"""
-    uid = sa.Column(INTEGER(unsigned=True),
-    # uid = sa.Column(sa.ForeignKey('users.uid'),
-                    nullable=False, primary_key=True)                                           # 用户ID
+    uid = sa.Column(INTEGER(unsigned=True), nullable=False,
+                    primary_key=True)                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
     name = sa.Column(VARCHAR(128), nullable=False)                              # 漫画名
@@ -106,9 +105,8 @@ class UserBook(TableBase):
 
 class UserOwn(TableBase):
     """用户拥有漫画章节"""
-    uid = sa.Column(INTEGER(unsigned=True),
-    # uid = sa.Column(sa.ForeignKey('users.uid'),
-                    nullable=False, primary_key=True)                           # 用户ID
+    uid = sa.Column(INTEGER(unsigned=True), nullable=False,
+                    primary_key=True)                           # 用户ID
     cid = sa.Column(INTEGER(unsigned=True), nullable=False,
                     primary_key=True)                                           # 漫画ID
     ext = sa.Column(VARCHAR(4), nullable=False)                                 # 图片类型
@@ -179,6 +177,7 @@ class RechargeLog(TableBase):
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 完成时间
     cid = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)          # 订单发起时用户所看漫画
     chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所需购买章节
+    serial = sa.Column(VARCHAR(128), nullable=True)                             # 流水号
     ext = sa.Column(BLOB, nullable=True)                                        # 扩展信息
 
     __table_args__ = (

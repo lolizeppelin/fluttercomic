@@ -21,6 +21,9 @@ paypal_opts = [
     cfg.FloatOpt('roe',
                 default=1.0,
                 help='money rate of exchange, do not change this value if you don not what for'),
+    cfg.IntOpt('scale',
+               default=100,
+               help='scale for money to coins'),
 ]
 
 
