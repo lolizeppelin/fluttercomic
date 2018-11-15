@@ -414,16 +414,20 @@ class ComicRequest(MiddlewareContorller):
                 raise InvalidArgument('Do not buy not exist chaper')
             user = uquery.one()
 
+            one = CF.one - user.offer
+            if one <= 0:
+                raise ValueError('User offer over one chapter cost')
+
             coins = coin = user.coins
             gifts = gift = user.gifts
-            if coin + gift < common.ONECHAPTER:
+            if coin + gift < one:
                 raise InvalidArgument('Not enough coin')
             # coins 不足
-            if coin < common.ONECHAPTER:
-                gift = common.ONECHAPTER - coin
+            if coin < one:
+                gift = one - coin
             else:
                 gift = 0
-                coin = common.ONECHAPTER
+                coin = one
 
             owns = oquery.one_or_none()
             if not owns:
@@ -445,7 +449,8 @@ class ComicRequest(MiddlewareContorller):
                 owns.chapter = chapter
                 session.flush()
                 paylog = UserPayLog(uid=uid, cid=cid, chapter=chapter,
-                                    value=common.ONECHAPTER,
+                                    value=one,
+                                    offer=user.offer,
                                     coin=coin, gift=gift,
                                     coins=coins, gifts=gifts,
                                     time=int(time.time()))

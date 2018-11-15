@@ -67,6 +67,9 @@ class PayPalApi(object):
         self.session = session
         self.conf = conf
         self.roe = conf.roe
+        self.scale = conf.scale
+        self.currency = conf.currency
+        self.choices = set(conf.choices)
         LOG.info('PayPal roe is %f' % self.roe)
         self.api = self.SANDBOXAPI if conf.sandbox else self.API
 
@@ -86,7 +89,7 @@ class PayPalApi(object):
         data = dict(
             intent='sale',
             payer={'payment_method': 'paypal'},
-            transactions=[dict(amount=dict(total=money, currency='USD'))],
+            transactions=[dict(amount=dict(total=money, currency=self.currency))],
             redirect_urls={"return_url": "http://www.163.com",
                            "cancel_url": cancel}
         )
@@ -100,12 +103,13 @@ class PayPalApi(object):
         money = '%.2f' % (money*self.roe)
         url = self.api + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
         data = dict(payer_id=paypal.get('payerID'),
-                    transactions=[dict(amount=dict(total=money, currency='USD'))],
-                    )
+                    transactions=[dict(amount=dict(total=money, currency=self.currency))])
         resp = self.session.post(url, auth=self.auth, json=data,
                                  headers={"Content-Type": "application/json"}, timeout=10)
         LOG.info(resp.text)
         return jsonutils.loads_as_bytes(resp.text)
 
     def translate(self, money):
-        return (0, money*self.conf.scale) if self.conf.sandbox else (money*self.conf.scale, 0)
+        if money not in self.choices:
+            LOG.warning('money number not in chioces')
+        return (0, money*self.scale) if self.conf.sandbox else (money*self.scale, 0)

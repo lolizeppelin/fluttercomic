@@ -48,6 +48,7 @@ class User(TableBase):
     name = sa.Column(VARCHAR(32), nullable=False)                               # 用户名
     salt = sa.Column(CHAR(6), nullable=False)                                   # 密码盐
     passwd = sa.Column(VARCHAR(64), nullable=False)                             # 密码
+    offer = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)        # 购买优惠
     coins = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)        # 剩余coin
     gifts = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)        # 代币
     regtime = sa.Column(INTEGER(unsigned=True), nullable=False)                 # 注册时间
@@ -125,7 +126,8 @@ class UserPayLog(TableBase):
                     primary_key=True)                                           # 漫画ID
     chapter = sa.Column(INTEGER(unsigned=True), nullable=False,
                         primary_key=True)                                       # 章节
-    value = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 总消耗
+    value = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 购买章节消耗
+    offer = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)        # 购买优惠
     coin = sa.Column(SMALLINT(unsigned=True), nullable=False)                   # 购买用coin
     gift = sa.Column(SMALLINT(unsigned=True), nullable=False)                   # 购买用gift
     coins = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 购买时coins(加锁,准确)

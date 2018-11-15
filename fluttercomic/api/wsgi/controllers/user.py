@@ -10,8 +10,9 @@ from sqlalchemy.sql import and_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.exc import MultipleResultsFound
-from simpleservice.ormdb.exceptions import DBDuplicateEntry
 
+
+from simpleutil.config import cfg
 from simpleutil.log import log as logging
 from simpleutil.utils import argutils
 from simpleutil.utils import singleton
@@ -20,8 +21,8 @@ from simpleutil.utils import digestutils
 from simpleutil.common.exceptions import InvalidArgument
 
 from simpleservice.ormdb.api import model_query
-from simpleservice.ormdb.api import model_count_with_key
 from simpleservice.wsgi.middleware import MiddlewareContorller
+from simpleservice.ormdb.exceptions import DBDuplicateEntry
 
 
 from goperation import threadpool
@@ -41,10 +42,14 @@ from fluttercomic.api import endpoint_session
 
 from fluttercomic.api.wsgi.token import verify
 from fluttercomic.api.wsgi.token import M
-from fluttercomic.api.wsgi.utils import format_chapters
+from fluttercomic.plugin.platforms import Platforms
 
 
 LOG = logging.getLogger(__name__)
+
+CONF = cfg.CONF
+CF = CONF[common.NAME]
+
 
 FAULT_MAP = {
     InvalidArgument: webob.exc.HTTPClientError,
@@ -158,7 +163,10 @@ class UserRequest(MiddlewareContorller):
                                    data=[dict(token=token,
                                               name=user.name,
                                               uid=user.uid,
-                                              coins=(user.coins + user.gifts))])
+                                              coins=(user.coins + user.gifts),
+                                              playforms=Platforms,
+                                              one=max(0, CF.one - user.offer)
+                                              )])
 
     @verify()
     def coins(self, req, uid, body=None):
@@ -202,22 +210,3 @@ class UserRequest(MiddlewareContorller):
         """后台发送gift接口"""
         raise NotImplementedError('gift~~')
 
-    @verify()
-    def order(self, req, uid, body=None):
-        """创建充值订单"""
-        uid = int(uid)
-        body = body or {}
-        coin = body.get('coin')
-        money = coin * common.PROPORTION
-        session = endpoint_session()
-        query = model_query(session, User.coins, filter=User.uid == uid)
-        user = query.one()
-        if user.status != common.ACTIVE:
-            raise
-        order = Order(uid=uid, coins=user.coins, coin=coin, money=money,
-                      platform=body.get('platform'), serial=body.get('serial'), time=int(time.time()),
-                      cid=body.get('cid'), chapter=body.get('chapter'), ext=body.get('ext'))
-        session.add(Order)
-        session.flush()
-        return resultutils.results(result='build order success',
-                                   data=[dict(oid=order.oid, money=money)])

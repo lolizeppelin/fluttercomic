@@ -1,31 +1,28 @@
 from simpleutil.config import cfg
-from simpleutil.config import types
 
 from fluttercomic import common
 
+from fluttercomic.plugin.platforms import config
+
 CONF = cfg.CONF
 
-NAME = '%s.paypal' % common.NAME
+NAME = 'paypal'
 
 
-group = cfg.OptGroup(name=NAME, title='Fluttercomic Pay platform paypal')
+group = cfg.OptGroup(name='%s.%s' % (common.NAME, NAME), title='Fluttercomic Pay platform paypal')
 
 paypal_opts = [
     cfg.StrOpt('clientID',
                help='paypal clientID'),
     cfg.StrOpt('secret',
                help='paypal secret'),
-    cfg.BoolOpt('sandbox',
-                default=True,
-                help='paypal is sandbox api, just for send to paypal sandbox'),
-    cfg.FloatOpt('roe',
-                default=1.0,
-                help='money rate of exchange, do not change this value if you don not what for'),
-    cfg.IntOpt('scale',
-               default=100,
-               help='scale for money to coins'),
 ]
 
 
 def register_opts(group):
-    CONF.register_opts(paypal_opts, group)
+    CONF.register_opts(paypal_opts + config.platform_opts, group)
+    config.register_platform(name=NAME,
+                             choices=CONF[group.name].choices,
+                             scale=CONF[group.name].scale,
+                             currency=CONF[group.name].currency)
+

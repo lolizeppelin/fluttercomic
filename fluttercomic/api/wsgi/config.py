@@ -20,6 +20,9 @@ comic_opts = [
     cfg.StrOpt('ipaddr',
                help='Websocket upload ipaddr'
                ),
+    cfg.IntOpt('one',
+               default=25,
+               help='One chapter cost coins'),
 ]
 
 

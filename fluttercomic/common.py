@@ -6,13 +6,9 @@ MAXBOOKS = 50
 # 最大章节
 MAXCHAPTERS = 1000
 
-# 比例
-PROPORTION = 12
 
 ACTIVE = 0
 HIDE = 1
-
-ONECHAPTER = 10
 
 IMGEXT = frozenset(['.jpg', '.png', '.bmp', '.jpeg', '.webp'])
 

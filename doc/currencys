@@ -1,0 +1,15 @@
+# -*- coding:utf-8 -*-
+import json
+import requests
+from pyquery import PyQuery as pq
+url = 'https://justforex.com/cn/education/currencies'
+html = requests.get(url).text
+doc = pq(html)
+div = doc('.ag-table-block')
+tables = div[0][0][1]
+currencys = {}
+for x in tables:
+    currencys[x[0].text] = dict(symbol=x[1].text.encode('utf-8') if x[1].text else '',
+                                code=int(x[2].text),name=x[3].text.encode('utf-8'),
+                                contrys = [ dict(contry=y.text.encode('utf-8'), icon=y.get('class').split(' ')[1]) for y in x[4][0]])
+print json.dumps(currencys, indent=2, ensure_ascii=False)

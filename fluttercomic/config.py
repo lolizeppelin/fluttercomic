@@ -16,5 +16,6 @@ def list_server_opts():
 
 
 def list_paypal_opts():
+    from fluttercomic.plugin.platforms.config import platform_opts
     from fluttercomic.plugin.platforms.paypal.config import paypal_opts
-    return paypal_opts
+    return paypal_opts + platform_opts

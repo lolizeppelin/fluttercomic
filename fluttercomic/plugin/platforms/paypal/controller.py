@@ -35,12 +35,12 @@ from fluttercomic.api import endpoint_session
 from fluttercomic.plugin.platforms.paypal import config
 
 CONF = cfg.CONF
-CONF.register_group(config.group)
-CONF.register_opts(config.paypal_opts, config.group)
 
 LOG = logging.getLogger(__name__)
 
-paypalApi = PayPalApi(CONF[config.NAME])
+CONF.register_group(config.group)
+config.register_opts(config.group)
+paypalApi = PayPalApi(CONF[config.group.name])
 
 FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
              NoResultFound: webob.exc.HTTPNotFound,

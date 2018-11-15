@@ -29,6 +29,9 @@
 # Websocket upload ipaddr (string value)
 #ipaddr = <None>
 
+# One chapter cost coins (integer value)
+#one = 25
+
 # Platforms list enabled (list value)
 #platforms =
 
@@ -112,3 +115,12 @@
 # money rate of exchange, do not change this value if you don not what for
 # (floating point value)
 #roe = 1.0
+
+# scale for money to coins (integer value)
+#scale = 100
+
+# Pay currency type (string value)
+#currency = USD
+
+# Pay money choice (list value)
+#choices =
