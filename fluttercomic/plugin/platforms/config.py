@@ -27,7 +27,7 @@ platform_opts = [
                help='Pay currency type'),
     cfg.ListOpt('choices',
                 default=[],
-                item_type=types.Integer,
+                item_type=types.Integer(),
                 help='Pay money choice')
 ]
 

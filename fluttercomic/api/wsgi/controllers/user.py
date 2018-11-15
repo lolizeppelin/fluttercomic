@@ -164,7 +164,7 @@ class UserRequest(MiddlewareContorller):
                                               name=user.name,
                                               uid=user.uid,
                                               coins=(user.coins + user.gifts),
-                                              playforms=Platforms,
+                                              platforms=Platforms,
                                               one=max(0, CF.one - user.offer)
                                               )])
 
