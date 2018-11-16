@@ -115,7 +115,10 @@ class UserRequest(MiddlewareContorller):
         token = TokenProvider.create(req, dict(uid=user.uid, name=user.name), 3600)
         return resultutils.results(result='crate user success',
                                    data=[dict(token=token, uid=user.uid, name=user.name,
-                                              coins=(user.coins + user.gifts))])
+                                              coins=(user.coins + user.gifts),
+                                              platforms=Platforms,
+                                              one=max(0, CF.one - user.offer)
+                                              )])
 
     @verify(vtype=M)
     def show(self, req, uid, body=None):
