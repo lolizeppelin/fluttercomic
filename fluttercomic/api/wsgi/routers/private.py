@@ -26,7 +26,8 @@ class UserPrivateRouters(router.ComposableRouter):
         collection.member.link('books', method='GET')
         collection.member.link('owns', method='GET')
         collection.member.link('orders', method='GET')
-        collection.member.link('order', method='PUT')
+        # collection.member.link('order', method='PUT')
+        collection.member.link('paylogs', method='GET')
 
 
 

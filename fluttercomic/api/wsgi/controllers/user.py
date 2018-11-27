@@ -131,7 +131,7 @@ class UserRequest(MiddlewareContorller):
         query = query.options(joins)
         user = query.one()
         return resultutils.results(result='show user success',
-                                   data=[dict(name=user.name, uid=user.uid,
+                                   data=[dict(name=user.name, uid=user.uid, offer=user.offer,
                                               coins=user.coins, gifts=user.gifts,
                                               status=user.status, regtime=user.regtime,
                                               books=[dict(cid=comic.cid, name=comic.name,
@@ -205,9 +205,29 @@ class UserRequest(MiddlewareContorller):
                                          for own in query])
 
     @verify(vtype=M)
+    def order(self, req, uid, body=None):
+        """用户创建"""
+        raise NotImplementedError('orders~~')
+
+    @verify(vtype=M)
     def orders(self, req, uid, body=None):
         """用户订单列表"""
         raise NotImplementedError('orders~~')
+
+    @verify(vtype=M)
+    def paylogs(self, req, uid, body=None):
+        """用户支付列表"""
+        body = body or {}
+        desc = body.get('desc', True)
+        session = endpoint_session(readonly=True)
+        query = model_query(session, UserPayLog)
+        query = query.order_by(UserPayLog.time.desc() if desc else UserPayLog.time)
+        return resultutils.results(result='list users paylogs success',
+                                   data=[dict(cid=paylog.cid, chapter=paylog.chapter,
+                                              value=paylog.value, offer=paylog.offer,
+                                              coin=paylog.coin, gift=paylog.gift,
+                                              coins=paylog.coins, gifts=paylog.gifts,
+                                              time=paylog.time) for paylog in query])
 
     @verify(vtype=M)
     def gitf(self, req, uid, body=None):

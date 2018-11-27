@@ -90,6 +90,25 @@ class FlutterComicClient(GopHttpClientApi):
                                             resone=results['result'])
         return results
 
+    def user_orders(self, uid, token, body=None):
+        headers = {common.TOKENNAME: token, common.FERNETHEAD: 'yes'}
+        resp, results = self.get(action=self.user_path_ex % (self.PRIVATE, uid, 'orders'), headers=headers)
+        if results['resultcode'] != common.RESULT_SUCCESS:
+            raise ServerExecuteRequestError(message='fluttercomic get user orders fail:%d' % results['resultcode'],
+                                            code=resp.status_code,
+                                            resone=results['result'])
+        return results
+
+
+    def user_paylogs(self, uid, token, body=None):
+        headers = {common.TOKENNAME: token, common.FERNETHEAD: 'yes'}
+        resp, results = self.put(action=self.user_path_ex % (self.PRIVATE, uid, 'paylogs'), headers=headers)
+        if results['resultcode'] != common.RESULT_SUCCESS:
+            raise ServerExecuteRequestError(message='fluttercomic user create order fail:%d' % results['resultcode'],
+                                            code=resp.status_code,
+                                            resone=results['result'])
+        return results
+
     def user_login(self, uid, body=None):
         headers = { common.FERNETHEAD: 'yes'}
         resp, results = self.put(action=self.user_path_ex % (self.PUBLIC, uid, 'login'), headers=headers,
