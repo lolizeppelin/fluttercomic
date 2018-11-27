@@ -1,5 +1,4 @@
 # -*- coding: UTF-8 -*-
-
 from simpleservice import common as service_common
 
 from goperation.manager import exceptions
@@ -7,6 +6,7 @@ from goperation.manager.tokens import TokenProvider
 
 M = object()    # 管理员接口
 U = object()    # 普通用户接口
+B = object()    # 普通用户/管理员 通用接口
 
 
 def verify(vtype=U):
@@ -48,19 +48,25 @@ class TokenVerify(object):
             self.func = self.func.__get__(instance, owner)
         return self
 
+    @staticmethod
+    def _validate_uid(kwargs, token):
+        if int(kwargs.get('uid')) != token.get('uid'):
+            raise exceptions.TokenError('Token uid not match with value in kwargs')
+
     def __call__(self, req, **kwargs):
-        # 普通用户必须是fernet token
-        if self.vtype is U and not TokenProvider.is_fernet(req):
-            raise exceptions.TokenError('Not fernet token')
         try:
             token = TokenProvider.token(req)
         except KeyError:
             # 未经认证拦截器校验
             raise exceptions.TokenError('Token not verify or none')
-        if self.vtype is M and not token.get('mid'):
-            raise exceptions.TokenError('No manager found in token')
+        if self.vtype is M:
+            if not token.get('mid'):
+                raise exceptions.TokenError('No manager found in token')
+        elif self.vtype is U:
+            if not TokenProvider.is_fernet(req):
+                raise exceptions.TokenError('Not fernet token')
+            self._validate_uid(kwargs, token)
         else:
-            if self.vtype is not M and 'uid' in kwargs and (kwargs.get('uid') != str(token.get('uid'))):
-                raise exceptions.TokenError('Uid not match kwargs is %s '
-                                            'but token is %s' % (kwargs.get('uid'), str(token.get('uid'))))
+            if TokenProvider.is_fernet(req):
+                self._validate_uid(kwargs, token)
         return self.func(req, **kwargs)

@@ -42,6 +42,7 @@ from fluttercomic.api import endpoint_session
 
 from fluttercomic.api.wsgi.token import verify
 from fluttercomic.api.wsgi.token import M
+from fluttercomic.api.wsgi.token import B
 from fluttercomic.plugin.platforms import Platforms
 
 
@@ -192,7 +193,7 @@ class UserRequest(MiddlewareContorller):
                                    data=[dict(cid=book.cid, name=book.name, author=book.author, ext=book.ext)
                                          for book in query])
 
-    @verify()
+    @verify(vtype=B)
     def owns(self, req, uid, body=None):
         """列出已经购买的漫画"""
         uid = int(uid)
