@@ -67,6 +67,6 @@ class TokenVerify(object):
                 raise exceptions.TokenError('Not fernet token')
             self._validate_uid(kwargs, token)
         else:
-            if TokenProvider.is_fernet(req):
+            if TokenProvider.is_fernet(req):            # fernet token的是普通用户token
                 self._validate_uid(kwargs, token)
         return self.func(req, **kwargs)

@@ -137,7 +137,7 @@ class UserRequest(MiddlewareContorller):
                                               books=[dict(cid=comic.cid, name=comic.name,
                                                           author=comic.author, time=comic.time)
                                                      for comic in user.books],
-                                              owns=[dict(cid=own.cid, chapters=msgpack.unpackb(own.chapters))
+                                              owns=[dict(cid=own.cid, chapter=own.chapter)
                                                     for own in user.owns],
                                               )])
 
@@ -201,7 +201,7 @@ class UserRequest(MiddlewareContorller):
         query = model_query(session, UserOwn, filter=UserOwn.uid == uid)
         return resultutils.results(result='get owns comics success',
                                    data=[dict(cid=own.cid, ext=own.ext, uid=own.uid,
-                                              chapters=msgpack.unpackb(own.chapters))
+                                              chapter=own.chapter)
                                          for own in query])
 
     @verify(vtype=M)
