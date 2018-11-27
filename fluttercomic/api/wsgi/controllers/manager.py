@@ -122,7 +122,7 @@ class ManagerRequest(MiddlewareContorller):
             raise InvalidArgument('Password error')
         if TokenProvider.is_fernet(req):
             raise InvalidArgument('Manager use uuid token')
-        token = TokenProvider.create(req, dict(mid=mid, name=manager.name), 3600)
+        token = TokenProvider.create(req, dict(mid=manager.mid, name=manager.name), 3600)
         return resultutils.results(result='manager login success',
                                    data=[dict(token=token, name=manager.name, mid=manager.mid)])
 
