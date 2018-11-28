@@ -1,5 +1,26 @@
 # -*- coding:utf-8 -*-
+from simpleutil.config import cfg
+from simpleutil.utils import singleton
 from simpleservice.wsgi.middleware import MiddlewareContorller
+
+from goperation.manager.utils import resultutils
+
+from fluttercomic import common
+
+CONF = cfg.CONF
+
+
+@singleton.singleton
+class PlatformsRequestPublic(MiddlewareContorller):
+
+    __conf = CONF[common.NAME]
+
+    ADMINAPI = False
+
+    def platforms(self):
+        return resultutils.results(result='get platforms success',
+                                   data=self.__conf.platforms)
+
 
 
 class PlatformsRequestBase(MiddlewareContorller):

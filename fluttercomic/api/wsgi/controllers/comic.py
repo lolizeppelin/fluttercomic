@@ -252,19 +252,31 @@ class ComicRequest(MiddlewareContorller):
 
     def index(self, req, body=None):
         """列出漫画"""
+        body = body or {}
+        cid = body.get('cid')
         session = endpoint_session(readonly=True)
-        query = model_query(session, Comic)
-        return resultutils.results(result='list comics success',
-                                   data=[dict(cid=comic.cid,
-                                              name=comic.name,
-                                              author=comic.author,
-                                              type=comic.type,
-                                              region=comic.region,
-                                              point=comic.point,
-                                              last=comic.last,
-                                              ext=comic.ext,
-                                              lastup=comic.lastup)
-                                         for comic in query])
+        filters = []
+        if cid:
+            filters.insert(0, Comic.cid < cid)
+        filters = filters[0] if len(filters) == 1 else and_(*filters)
+
+        ret_dict = resultutils.bulk_results(session,
+                                            model=Comic,
+                                            columns=[Comic.cid,
+                                                     Comic.name,
+                                                     Comic.author,
+                                                     Comic.type,
+                                                     Comic.region,
+                                                     Comic.point,
+                                                     Comic.last,
+                                                     Comic.ext,
+                                                     Comic.lastup,
+                                                     ],
+                                            counter=Comic.cid,
+                                            order=Order.oid, desc=True,
+                                            filter=filters,
+                                            limit=1000)
+        return ret_dict
 
     @verify(vtype=M)
     def create(self, req, body=None):

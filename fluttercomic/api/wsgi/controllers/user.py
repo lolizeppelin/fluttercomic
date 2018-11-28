@@ -14,7 +14,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound
 
 from simpleutil.config import cfg
 from simpleutil.log import log as logging
-from simpleutil.utils import argutils
+from simpleutil.utils import jsonutils
 from simpleutil.utils import singleton
 from simpleutil.utils import digestutils
 
@@ -38,6 +38,7 @@ from fluttercomic.models import UserOwn
 from fluttercomic.models import Comic
 from fluttercomic.models import Order
 from fluttercomic.models import UserPayLog
+from fluttercomic.models import RechargeLog
 from fluttercomic.api import endpoint_session
 
 from fluttercomic.api.wsgi.token import verify
@@ -205,22 +206,68 @@ class UserRequest(MiddlewareContorller):
                                          for own in query])
 
     @verify(vtype=M)
-    def order(self, req, uid, body=None):
-        """用户创建"""
-        raise NotImplementedError('orders~~')
+    def orders(self, req, uid, body=None):
+        """用户订单查询"""
+        uid = int(uid)
+        session = endpoint_session(readonly=True)
+        query = model_query(session, Order, filter=Order.uid == uid)
+        query = query.order_by(Order.oid.desc())
+        return resultutils.results(result='show order of user success',
+                                   data=[
+                                       dict(
+                                           oid=order.oid,
+                                           sandbox=order.sandbox,
+                                           uid=order.uid,
+                                           coins=order.coins,
+                                           gifts=order.gifts,
+                                           coin=order.coin,
+                                           gift=order.gift,
+                                           money=order.money,
+                                           platform=order.platform,
+                                           serial=order.serial,
+                                           time=order.time,
+                                           cid=order.cid,
+                                           chapter=order.chapter,
+                                           ext=jsonutils.loads_as_bytes(order.ext) if order.ext else None,
+                                       ) for order in query
+                                   ])
 
     @verify(vtype=M)
-    def orders(self, req, uid, body=None):
+    def recharges(self, req, uid, body=None):
         """用户订单列表"""
-        raise NotImplementedError('orders~~')
+        body = body or {}
+        uid = int(uid)
+        session = endpoint_session(readonly=True)
+        query = model_query(session, RechargeLog, filter=RechargeLog.uid == uid)
+        query = query.order_by(RechargeLog.oid.desc())
+        return resultutils.results(result='show user recharge log success',
+                                   data=[
+                                       dict(
+                                           oid=relog.oid,
+                                           sandbox=relog.sandbox,
+                                           uid=relog.uid,
+                                           coins=relog.coins,
+                                           gifts=relog.gifts,
+                                           coin=relog.coin,
+                                           gift=relog.gift,
+                                           money=relog.money,
+                                           platform=relog.platform,
+                                           serial=relog.serial,
+                                           time=relog.time,
+                                           cid=relog.cid,
+                                           chapter=relog.chapter,
+                                           ext=jsonutils.loads_as_bytes(relog.ext) if relog.ext else None,
+                                       ) for relog in query
+                                   ])
 
     @verify(vtype=M)
     def paylogs(self, req, uid, body=None):
         """用户支付列表"""
         body = body or {}
+        uid = int(uid)
         desc = body.get('desc', True)
         session = endpoint_session(readonly=True)
-        query = model_query(session, UserPayLog)
+        query = model_query(session, UserPayLog, filter=UserPayLog.uid == uid)
         query = query.order_by(UserPayLog.time.desc() if desc else UserPayLog.time)
         return resultutils.results(result='list users paylogs success',
                                    data=[dict(cid=paylog.cid, chapter=paylog.chapter,

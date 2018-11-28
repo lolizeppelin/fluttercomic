@@ -7,6 +7,7 @@ from fluttercomic import common
 from fluttercomic.api.wsgi.controllers import comic
 from fluttercomic.api.wsgi.controllers import manager
 from fluttercomic.api.wsgi.controllers import user
+from fluttercomic.api.wsgi.controllers import order
 
 
 @singleton.singleton
@@ -25,10 +26,9 @@ class UserPrivateRouters(router.ComposableRouter):
                                        member_actions=['show', 'update', 'delete'])
         collection.member.link('books', method='GET')
         collection.member.link('owns', method='GET')
+        collection.member.link('recharges', method='GET')
         collection.member.link('orders', method='GET')
-        # collection.member.link('order', method='PUT')
         collection.member.link('paylogs', method='GET')
-
 
 
 @singleton.singleton
@@ -93,6 +93,31 @@ class ManagerPrivateRouters(router.ComposableRouter):
                                        collection_actions=['index', 'create'],
                                        member_actions=['show', 'update', 'delete'])
         collection.member.link('loginout', method='POST')
+
+
+@singleton.singleton
+class OrderPrivateRoutes(router.ComposableRouter):
+
+    def add_routes(self, mapper):
+
+        order_controller = controller_return_response(order.OrderRequest(), manager.FAULT_MAP)
+        collection = mapper.collection(collection_name='orders',
+                                       resource_name='order',
+                                       controller=order_controller,
+                                       path_prefix='/%s/private' % common.NAME,
+                                       member_prefix='/{oid}',
+                                       collection_actions=['index'],
+                                       member_actions=['show'])
+
+
+        rechargelog_controller = controller_return_response(order.RechargeRequest(), manager.FAULT_MAP)
+        collection = mapper.collection(collection_name=' recharges',
+                                       resource_name='recharge',
+                                       controller=rechargelog_controller,
+                                       path_prefix='/%s/private' % common.NAME,
+                                       member_prefix='/{oid}',
+                                       collection_actions=['index'],
+                                       member_actions=['show'])
 
 
 class Routers(router.RoutersBase):

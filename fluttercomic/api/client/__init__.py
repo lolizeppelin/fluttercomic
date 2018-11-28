@@ -21,6 +21,8 @@ class FlutterComicClient(GopHttpClientApi):
     buy_path = '/fluttercomic/private/comic/%s/chapter/%s/user/%s'
     chapter_path = '/fluttercomic/private/comic/%s/chapters/%s'
 
+    platforms_path = '/fluttercomic/platforms'
+
     PRIVATE = 'private'
     PUBLIC = 'public'
 

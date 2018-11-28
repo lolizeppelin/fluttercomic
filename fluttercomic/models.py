@@ -84,6 +84,8 @@ class Comic(TableBase):
 
     __table_args__ = (
         sa.Index('name_index', 'name'),
+        sa.Index('author_index', 'author'),
+        sa.Index('region_index', 'region'),
         InnoDBTableBase.__table_args__
     )
 
@@ -160,6 +162,7 @@ class Order(TableBase):
     __table_args__ = (
         sa.UniqueConstraint('serial', name='serial_unique'),
         sa.Index('type_platform', 'platform'),
+        sa.Index('order_uid', 'uid'),
         MyISAMTableBase.__table_args__
     )
 
@@ -184,6 +187,7 @@ class RechargeLog(TableBase):
 
     __table_args__ = (
         sa.Index('type_platform', 'platform'),
+        sa.Index('order_uid', 'uid'),
         MyISAMTableBase.__table_args__
     )
 
@@ -193,11 +197,16 @@ class DuplicateRecharge(TableBase):
     id = sa.Column(BIGINT(unsigned=True), nullable=False,
                    primary_key=True, autoincrement=True)
     oid = sa.Column(BIGINT(unsigned=True), nullable=False)                      # 订单ID
+    uid = sa.Column(INTEGER(unsigned=True), nullable=False)                     # 用户id
     coin = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单coin数量
     gift = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单gift数量
     money = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 金钱数量
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 重复时间
+    status = sa.Column(INTEGER, nullable=False)                                 # 处理状态
+    serial = sa.Column(VARCHAR(128), nullable=True)                             # 流水号
 
     __table_args__ = (
+        sa.Index('order_id', 'oid'),
+        sa.Index('order_status', 'status'),
         MyISAMTableBase.__table_args__
     )

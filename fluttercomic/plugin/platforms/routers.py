@@ -6,6 +6,8 @@ from simpleservice.wsgi.middleware import controller_return_response
 
 from fluttercomic import common
 
+from fluttercomic.plugin.platforms.base import PlatformsRequestPublic
+
 CONF = cfg.CONF
 
 
@@ -16,6 +18,13 @@ class Routers(router.RoutersBase):
     def append_routers(self, mapper, routers=None):
 
         conf = CONF[common.NAME]
+
+        controller = controller_return_response(PlatformsRequestPublic(), {})
+
+        self._add_resource(mapper, controller,
+                           path='/%s/platforms' % common.NAME,
+                           get_action='platforms')
+
 
         for platform in conf.platforms:
             mod = 'fluttercomic.plugin.platforms.%s.controller' % platform.lower()
