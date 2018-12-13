@@ -11,4 +11,7 @@ MAXCHAPTERPIC = 300
 ACTIVE = 0
 HIDE = 1
 
+NOTCHCEK = 1
+
+
 IMGEXT = frozenset(['.jpg', '.png', '.bmp', '.jpeg', '.webp'])

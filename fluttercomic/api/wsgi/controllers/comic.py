@@ -273,7 +273,7 @@ class ComicRequest(MiddlewareContorller):
                                                      Comic.lastup,
                                                      ],
                                             counter=Comic.cid,
-                                            order=Order.oid, desc=True,
+                                            order=Comic.cid, desc=True,
                                             filter=filters,
                                             limit=1000)
         return ret_dict

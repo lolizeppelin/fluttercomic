@@ -8,6 +8,10 @@ from simpleutil.utils import jsonutils
 
 from simpleutil.utils import encodeutils
 
+from fluttercomic.plugin.platforms import exceptions
+from fluttercomic.plugin.platforms.base import PlatFormClient
+from fluttercomic.plugin.platforms.paypal.config import NAME
+
 LOG = logging.getLogger(__name__)
 
 
@@ -54,32 +58,21 @@ HTMLTEMPLATE = '''
 '''
 
 
-class PayPalApi(object):
+class PayPalApi(PlatFormClient):
 
     API = 'https://api.paypal.com'
     SANDBOXAPI = 'https://api.sandbox.paypal.com'
 
     def __init__(self, conf):
-        session = sessions.Session()
-        session.mount('http', HTTPAdapter(pool_maxsize=25))
-        session.mount('https', HTTPAdapter(pool_maxsize=25))
-        self.auth = HTTPBasicAuth(username=conf.clientID, password=conf.secret)
-        self.session = session
-        self.conf = conf
-        self.roe = conf.roe
-        self.scale = conf.scale
-        self.currency = conf.currency
-        self.choices = set(conf.choices)
-        LOG.info('PayPal roe is %f' % self.roe)
-        self.api = self.SANDBOXAPI if conf.sandbox else self.API
+        super(PayPalApi, self).__init__(NAME, conf)
 
-    @property
-    def sandbox(self):
-        return self.conf.sandbox
+        self.auth = HTTPBasicAuth(username=conf.clientID, password=conf.secret)
+        self.api = self.SANDBOXAPI if self.sandbox else self.API
+
 
     def html(self, **kwargs):
         _kwargs = copy.copy(kwargs)
-        _kwargs.update({'env': 'sandbox' if self.conf.sandbox else 'production'})
+        _kwargs.update({'env': 'sandbox' if self.sandbox else 'production'})
         buf = HTMLTEMPLATE % _kwargs
         return encodeutils.safe_decode(buf, 'utf-8')
 
@@ -96,10 +89,14 @@ class PayPalApi(object):
         resp = self.session.post(url, auth=self.auth, json=data,
                                  headers={"Content-Type": "application/json"},
                                  timeout=10)
-        LOG.info(resp.text)
-        return jsonutils.loads_as_bytes(resp.text)
+        if LOG.isEnabledFor(logging.DEBUG):
+            LOG.debug(resp.text)
+        payment =  jsonutils.loads_as_bytes(resp.text)
+        if payment.get('state') != 'created':
+            raise exceptions.CreateOrderError('Create Paypal payment error')
+        return payment['id']
 
-    def execute(self, paypal, money):
+    def _execute(self, paypal, money):
         money = '%.2f' % (money*self.roe)
         url = self.api + '/v1/payments/payment' + '/%s/execute' % paypal.get('paymentID')
         data = dict(payer_id=paypal.get('payerID'),
@@ -109,7 +106,9 @@ class PayPalApi(object):
         LOG.info(resp.text)
         return jsonutils.loads_as_bytes(resp.text)
 
-    def translate(self, money):
-        if money not in self.choices:
-            LOG.warning('money number not in chioces')
-        return (0, money*self.scale) if self.conf.sandbox else (money*self.scale, 0)
+    def execute(self, paypal, money):
+        pay_result = self._execute(paypal, money)
+        state = pay_result.get('state')
+        if state is None or state == 'failed':
+            LOG.error('Payment execute status fail')
+            raise exceptions.EsureOrderError('Payment execute result is not success')

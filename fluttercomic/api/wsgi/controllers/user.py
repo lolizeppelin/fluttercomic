@@ -97,7 +97,7 @@ class UserRequest(MiddlewareContorller):
         query = model_query(session, User)
         query = query.order_by(User.uid)
         return resultutils.results(result='list users success',
-                                   data=[dict(name=user.name, uid=user.uid,
+                                   data=[dict(name=user.name, uid=user.uid, offer=user.offer,
                                               coins=user.coins, gifts=user.gifts,
                                               status=user.status, regtime=user.regtime) for user in query])
 

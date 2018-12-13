@@ -5,6 +5,8 @@ from sqlalchemy.sql import and_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.exc import MultipleResultsFound
+from simpleservice.ormdb.exceptions import DBError
+from simpleservice.ormdb.exceptions import DBDuplicateEntry
 
 from simpleutil.log import log as logging
 from simpleutil.config import cfg
@@ -33,6 +35,7 @@ from fluttercomic.models import RechargeLog
 from fluttercomic.api import endpoint_session
 
 from fluttercomic.plugin.platforms.paypal import config
+from fluttercomic.plugin.platforms import exceptions
 
 CONF = cfg.CONF
 
@@ -44,7 +47,9 @@ paypalApi = PayPalApi(CONF[config.group.name])
 
 FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
              NoResultFound: webob.exc.HTTPNotFound,
-             MultipleResultsFound: webob.exc.HTTPInternalServerError}
+             MultipleResultsFound: webob.exc.HTTPInternalServerError,
+             exceptions.EsureOrderError: webob.exc.HTTPInternalServerError
+             }
 
 
 NEWPAYMENT = {
@@ -129,31 +134,13 @@ class PaypalRequest(PlatformsRequestBase):
         if (now - otime) > 60000 or otime > now:
             raise InvalidArgument('Order id error')
 
-        coin, gift = paypalApi.translate(money)
+        serial = paypalApi.payment(money, cancel_url)
         session = endpoint_session()
-        query = model_query(session, User, filter=User.uid == uid)
-        with session.begin():
-            user = query.one()
-            payment = paypalApi.payment(money, cancel_url)
-            if payment.get('state') != 'created':
-                raise InvalidArgument('Create order fail, call create payment error')
-            order = Order(oid=oid, uid=uid,
-                          sandbox=paypalApi.sandbox,
-                          money=money,
-                          platform='paypal',
-                          serial=payment.get('id'),
-                          time=int(time.time()),
-                          cid=cid,
-                          chapter=chapter,
-                          coins=user.coins,
-                          gifts=user.gifts,
-                          coin=coin,
-                          gift=gift)
-            session.add(order)
+        coins = self.order(session, paypalApi, serial,
+                           uid, oid, money, cid, chapter)
         return resultutils.results(result='create paypal payment success',
-                                   data=[dict(paypal=dict(paymentID=payment.get('id')),
-                                              oid=oid, coins=coin+gift, money=money)
-                                         ])
+                                   data=[dict(paypal=dict(paymentID=serial), oid=oid,
+                                              coins=coins, money=money)])
 
     def esure(self, req, oid, body=None):
         body = body or {}
@@ -173,44 +160,26 @@ class PaypalRequest(PlatformsRequestBase):
 
         session = endpoint_session()
         query = model_query(session, Order, filter=Order.oid == oid)
-        uquery = session.query(User).filter(User.uid == uid).with_for_update()
+        order = query.one()
+        if order.uid != uid:
+            raise InvalidArgument('User id not the same')
+        if order.serial != paypal.get('paymentID'):
+            raise InvalidArgument('paymentID not the same')
 
-        with session.begin():
-            order = query.one()
-            if order.uid != uid:
-                raise InvalidArgument('User id not the same')
-            if order.serial != paypal.get('paymentID'):
-                raise InvalidArgument('paymentID not the same')
-            user = uquery.one()
-            pay_result = paypalApi.execute(paypal, order.money)
-            state = pay_result.get('state')
-            if state is None or state == 'failed':
-                raise InvalidArgument('Payment execute')
+        def execute(extdata=None):
+            LOG.info('Call paypalApi execute order')
+            paypalApi.execute(paypal, order.money)
+            return extdata
 
-            recharge = RechargeLog(
-                oid=order.oid,
-                sandbox=paypalApi.sandbox,
-                uid=uid,
-                coins=user.coins,
-                gifts=user.gifts,
-                coin=order.coin,
-                gift=order.gift,
-                money=order.money,
-                platform=order.platform,
-                time=int(time.time()),
-                cid=order.cid,
-                chapter=order.chapter,
-                serial=order.serial,
-                ext=None,
-            )
-            user.coins += order.coin
-            user.gifts += order.gift
-            try:
-                session.add(recharge)
-            except Exception:
-                LOG.error('Add recharge fail, order id %d' % order.oid)
+        try:
+            self.record(session, order, None, execute)
+        except DBError:
+            LOG.error('WeiXin save order %d to database fail' % order.oid)
+        except exceptions.EsureOrderError:
+            LOG.error('Call Paypal execute order fail')
+            raise
 
-        return resultutils.results(result='esure  orde success',
+        return resultutils.results(result='esure orde success',
                                    data=[dict(paypal=dict(paymentID=paypal.get('paymentID'),
                                                           payerID=paypal.get('payerID')),
                                               oid=oid, coins=order.gift+order.coin, money=order.money)

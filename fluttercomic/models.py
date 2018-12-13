@@ -152,6 +152,7 @@ class Order(TableBase):
     coin = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单coin数量
     gift = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单gift数量
     money = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 金钱数量
+    currency = sa.Column(VARCHAR(16), nullable=True)                            # 币种
     platform = sa.Column(VARCHAR(32), nullable=True)                            # 订单类型平台
     serial = sa.Column(VARCHAR(128), nullable=True)                             # 流水号
     time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单时间
@@ -178,8 +179,10 @@ class RechargeLog(TableBase):
     coin = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单coin数量
     gift = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单gift数量
     money = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 金钱数量
+    currency = sa.Column(VARCHAR(16), nullable=True)                            # 币种
     platform = sa.Column(VARCHAR(32), nullable=True)                            # 订单类型平台
-    time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 完成时间
+    time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单时间
+    ftime = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 完成时间
     cid = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)          # 订单发起时用户所看漫画
     chapter = sa.Column(INTEGER(unsigned=True), nullable=False, default=0)      # 订单发起时用户所需购买章节
     serial = sa.Column(VARCHAR(128), nullable=True)                             # 流水号
@@ -201,7 +204,8 @@ class DuplicateRecharge(TableBase):
     coin = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单coin数量
     gift = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 订单gift数量
     money = sa.Column(INTEGER(unsigned=True), nullable=False)                   # 金钱数量
-    time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 重复时间
+    currency = sa.Column(VARCHAR(16), nullable=True)                            # 币种
+    time = sa.Column(INTEGER(unsigned=True), nullable=False)                    # 重复订单生成时间
     status = sa.Column(INTEGER, nullable=False)                                 # 处理状态
     serial = sa.Column(VARCHAR(128), nullable=True)                             # 流水号
 
