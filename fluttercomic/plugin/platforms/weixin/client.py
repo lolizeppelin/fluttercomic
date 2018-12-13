@@ -122,6 +122,8 @@ class WeiXinApi(PlatFormClient):
         return result['prepay_id']
 
     def esure(self, data, order):
+        if LOG.isEnabledFor(logging.DEBUG):
+            LOG.debug(data)
         data = WeiXinApi._decrypt_xml_to_dict(data)
         if data.get('return_code') != 'SUCCESS':
             LOG.error('Create WeiXin request payment api fail: %s' % data.get('return_msg'))

@@ -119,10 +119,6 @@ class WeiXinRequest(PlatformsRequestBase):
 
         if (now - otime) > weiXinApi.overtime*2 or otime > now:
             raise InvalidArgument('Order id error or more overtime')
-
-        if LOG.isEnabledFor(logging.DEBUG):
-            LOG.debug(body)
-
         session = endpoint_session()
         query = model_query(session, Order, filter=Order.oid == oid)
         order = query.one()

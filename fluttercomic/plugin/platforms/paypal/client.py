@@ -89,8 +89,6 @@ class PayPalApi(PlatFormClient):
         resp = self.session.post(url, auth=self.auth, json=data,
                                  headers={"Content-Type": "application/json"},
                                  timeout=10)
-        if LOG.isEnabledFor(logging.DEBUG):
-            LOG.debug(resp.text)
         payment =  jsonutils.loads_as_bytes(resp.text)
         if payment.get('state') != 'created':
             raise exceptions.CreateOrderError('Create Paypal payment error')
@@ -103,7 +101,8 @@ class PayPalApi(PlatFormClient):
                     transactions=[dict(amount=dict(total=money, currency=self.currency))])
         resp = self.session.post(url, auth=self.auth, json=data,
                                  headers={"Content-Type": "application/json"}, timeout=10)
-        LOG.info(resp.text)
+        if LOG.isEnabledFor(logging.DEBUG):
+            LOG.debug(resp.text)
         return jsonutils.loads_as_bytes(resp.text)
 
     def execute(self, paypal, money):
