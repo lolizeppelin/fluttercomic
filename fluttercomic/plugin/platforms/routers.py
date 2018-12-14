@@ -13,7 +13,7 @@ CONF = cfg.CONF
 
 class Routers(router.RoutersBase):
 
-    resource_name = 'fluttercomicplatfrom'
+    resource_name = 'fluttercomic_platform'
 
     def append_routers(self, mapper, routers=None):
 
@@ -30,6 +30,7 @@ class Routers(router.RoutersBase):
             mod = 'fluttercomic.plugin.platforms.%s.controller' % platform.lower()
             module = importutils.import_module(mod)
             cls = getattr(module, '%sRequest' % platform.capitalize())
+            ctrl_instance = cls()
             controller = controller_return_response(cls(), module.FAULT_MAP)
 
             self._add_resource(mapper, controller,
@@ -41,9 +42,15 @@ class Routers(router.RoutersBase):
                                post_action='new')
 
             self._add_resource(mapper, controller,
-                               path='/%s/orders/callback/%s/{oid}' % (common.NAME, platform.lower()),
-                               post_action='esure')
+                               path='/%s/orders/platforms/%s/{oid}' % (common.NAME, platform.lower()),
+                               post_action='notify')
 
             self._add_resource(mapper, controller,
-                               path='/%s/orders/gifts/%s' % (common.NAME, platform.lower()),
-                               post_action='gift')
+                   path='/%s/orders/platforms/%s/{oid}' % (common.NAME, platform.lower()),
+                   get_action='esure')
+
+            ctrl_instance.extrouters(self, mapper, controller)
+
+            # self._add_resource(mapper, controller,
+            #                    path='/%s/orders/gifts/%s' % (common.NAME, platform.lower()),
+            #                    post_action='gift')

@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import time
+import webob
 import webob.exc
 from sqlalchemy.sql import and_
 from sqlalchemy.orm import joinedload
@@ -88,8 +89,6 @@ ESUREPAY = {
 @singleton.singleton
 class WeiXinRequest(PlatformsRequestBase):
 
-    ADMINAPI = False
-    JSON = False
 
     def new(self, req, body=None):
         """发起订单"""
@@ -105,25 +104,50 @@ class WeiXinRequest(PlatformsRequestBase):
 
         oid = uuidutils.Gkey()
         session = endpoint_session()
-        serial = weiXinApi.payment(money, oid, start_time, req)
-        coins = self.order(session, weiXinApi, serial,
+        prepay_id = weiXinApi.payment(money, oid, start_time, req)
+        coins = self.order(session, weiXinApi, None,
                            uid, oid, money, cid, chapter,
-                           start_time)
+                           ext={'prepay_id': prepay_id},
+                           order_time=start_time)
         return resultutils.results(result='create paypal payment success',
-                                   data=[dict(oid=oid, coins=coins, money=money)])
+                                   data=[dict(oid=oid, coins=coins, money=money,
+                                              prepay_id=prepay_id)])
 
-    def esure(self, req, oid, body=None):
+    def notify(self, req, oid, body=None):
+        """这个接口由微信调用"""
         oid = int(oid)
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
-
         if (now - otime) > weiXinApi.overtime*2 or otime > now:
-            raise InvalidArgument('Order id error or more overtime')
+            raise InvalidArgument('Order id error or overtime')
         session = endpoint_session()
         query = model_query(session, Order, filter=Order.oid == oid)
         order = query.one()
-        extdata = weiXinApi.esure(body, order)
-        self.record(session, order, extdata)
+        serial, extdata = weiXinApi.esure_notify(body, order)
+        self.record(session, order, serial, extdata)
+        return webob.Response(request=req, status=200, content_type='application/xml',
+                              body=weiXinApi.success)
 
-        return resultutils.results(result='esure  orde success',
+
+    def esure(self, req, oid, body=None):
+        """这个接口由客户端调用"""
+        oid = int(oid)
+        now = int(time.time()*1000)
+        otime = uuidutils.Gprimarykey.timeformat(oid)
+        if (now - otime) > weiXinApi.overtime*2 or otime > now:
+            raise InvalidArgument('Order id error or overtime')
+
+        session = endpoint_session(readonly=True)   # 注意主从不同步的可能
+        query = model_query(session, RechargeLog, filter=RechargeLog.oid == oid)
+        recharge = query.one_or_none()
+        if recharge:
+            return resultutils.results(result='esure orde success',
+                                       data=[dict(oid=oid, coins=recharge.gift+recharge.coin, money=recharge.money)])
+        session = endpoint_session()
+        query = model_query(session, Order, filter=Order.oid == oid)
+        order = query.one()
+        serial, extdata = weiXinApi.esure_order(order)
+        self.record(session, order, serial, extdata)
+        return resultutils.results(result='esure orde success',
                                    data=[dict(oid=oid, coins=order.gift+order.coin, money=order.money)])
+

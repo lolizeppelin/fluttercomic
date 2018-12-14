@@ -80,7 +80,7 @@ ESUREPAY = {
             'paypal': {
                 'type': 'object',
                 'required': ['paymentID', 'payerID'],
-                'properties' : {
+                'properties': {
                     'paymentID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
                     'payerID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
                 }
@@ -91,9 +91,6 @@ ESUREPAY = {
 
 @singleton.singleton
 class PaypalRequest(PlatformsRequestBase):
-
-    ADMINAPI = False
-    JSON = False
 
     def html(self, req, body=None):
         """生成订单页面html"""
@@ -131,7 +128,7 @@ class PaypalRequest(PlatformsRequestBase):
 
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
-        if (now - otime) > 60000 or otime > now:
+        if (now - otime) > 6000 or otime > now:
             raise InvalidArgument('Order id error')
 
         serial = paypalApi.payment(money, cancel_url)
@@ -142,7 +139,7 @@ class PaypalRequest(PlatformsRequestBase):
                                    data=[dict(paypal=dict(paymentID=serial), oid=oid,
                                               coins=coins, money=money)])
 
-    def esure(self, req, oid, body=None):
+    def notify(self, req, oid, body=None):
         body = body or {}
         if not isinstance(body, dict):
             raise InvalidArgument('Http body not json or content type is not application/json')
@@ -166,21 +163,25 @@ class PaypalRequest(PlatformsRequestBase):
         if order.serial != paypal.get('paymentID'):
             raise InvalidArgument('paymentID not the same')
 
-        def execute(extdata=None):
+        def paypal_execute(extdata=None):
             LOG.info('Call paypalApi execute order')
             paypalApi.execute(paypal, order.money)
             return extdata
 
         try:
-            self.record(session, order, None, execute)
+            self.record(session, order, None, None,
+                        on_transaction_call=paypal_execute)
         except DBError:
             LOG.error('WeiXin save order %d to database fail' % order.oid)
         except exceptions.EsureOrderError:
             LOG.error('Call Paypal execute order fail')
             raise
 
-        return resultutils.results(result='esure orde success',
+        return resultutils.results(result='notify orde success',
                                    data=[dict(paypal=dict(paymentID=paypal.get('paymentID'),
                                                           payerID=paypal.get('payerID')),
                                               oid=oid, coins=order.gift+order.coin, money=order.money)
                                          ])
+
+    def esure(self, req, oid, body=None):
+        raise NotImplementedError

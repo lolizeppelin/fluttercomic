@@ -41,11 +41,14 @@ class PlatformsRequestPublic(MiddlewareContorller):
                                    data=self.__conf.platforms)
 
 
-
 class PlatformsRequestBase(MiddlewareContorller):
 
     ADMINAPI = False
+    JSON = False
 
+    @staticmethod
+    def extrouters(router, mapper, controller):
+        """ext router"""
 
     def html(self, req, body=None):
         raise NotImplementedError
@@ -57,10 +60,13 @@ class PlatformsRequestBase(MiddlewareContorller):
     def esure(self, req, oid, body=None):
         raise NotImplementedError
 
+    def notify(self, req, oid, body=None):
+        raise NotImplementedError
+
     @staticmethod
     def order(session, client, serial,
               uid, oid, money, cid, chapter,
-              order_time=None):
+              ext=None, order_time=None):
         query = model_query(session, User, filter=User.uid == uid)
         coin, gift = client.translate(money)
         with session.begin():
@@ -76,12 +82,14 @@ class PlatformsRequestBase(MiddlewareContorller):
                           coins=user.coins,
                           gifts=user.gifts,
                           coin=coin,
-                          gift=gift)
+                          gift=gift,
+                          ext=jsonutils.dumps(ext) if ext else None)
             session.add(order)
         return coin + gift
 
     @staticmethod
-    def record(session, order, extdata, on_transaction_call=None):
+    def record(session, order, serial, extdata,
+               on_transaction_call=None):
 
         uid = order.uid
         query = session.query(User).filter(User.uid == uid).with_for_update()
@@ -90,7 +98,7 @@ class PlatformsRequestBase(MiddlewareContorller):
             with session.begin():
                 user = query.one()
                 if on_transaction_call:
-                    extdata= on_transaction_call(extdata)
+                    extdata = on_transaction_call(extdata)
                 recharge = RechargeLog(
                     oid=order.oid,
                     sandbox=order.sandbox,
@@ -105,7 +113,7 @@ class PlatformsRequestBase(MiddlewareContorller):
                     ftime=int(time.time()),
                     cid=order.cid,
                     chapter=order.chapter,
-                    serial=order.serial,
+                    serial=serial if serial else order.serial,
                     ext=jsonutils.dumps(extdata) if extdata else None,
                 )
                 user.coins += order.coin
@@ -113,11 +121,11 @@ class PlatformsRequestBase(MiddlewareContorller):
                 session.add(recharge)
         except DBDuplicateEntry:
             LOG.warning('Duplicate esure notify')
-            d =  DuplicateRecharge(oid=order.oid, uid=order.uid,
-                                   coin=order.coin, gift=order.gift,
-                                   money=order.money, currency=order.currency,
-                                   time=int(time.time()), status=common.NOTCHCEK,
-                                   serial=order.serial)
+            d = DuplicateRecharge(oid=order.oid, uid=order.uid,
+                                  coin=order.coin, gift=order.gift,
+                                  money=order.money, currency=order.currency,
+                                  time=int(time.time()), status=common.NOTCHCEK,
+                                  serial=order.serial)
             try:
                 session.add(d)
             except DBError:
