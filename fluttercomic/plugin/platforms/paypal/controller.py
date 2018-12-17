@@ -128,7 +128,8 @@ class PaypalRequest(PlatformsRequestBase):
 
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
-        if (now - otime) > 6000 or otime > now:
+        if (now - otime) > 600000 or otime > now:
+            LOG.debug('Oder time %d, now %d' % (otime, now))
             raise InvalidArgument('Order id error')
 
         serial = paypalApi.payment(money, cancel_url)

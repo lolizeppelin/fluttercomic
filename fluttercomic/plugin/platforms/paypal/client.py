@@ -38,7 +38,7 @@ HTMLTEMPLATE = '''
         onAuthorize: function (data, actions) {
             return actions.request({
                     method: "post",
-                    url: '/n1.0/fluttercomic/orders/callback/paypal/%(oid)d',
+                    url: '/n1.0/fluttercomic/orders/platforms/paypal/%(oid)d',
                     json: {paypal: { paymentID: data.paymentID, payerID: data.payerID}, uid: %(uid)d},
                 })
                 .then(function (res) {

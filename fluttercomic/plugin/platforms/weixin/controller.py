@@ -121,7 +121,7 @@ class WeiXinRequest(PlatformsRequestBase):
         oid = int(oid)
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
-        if (now - otime) > weiXinApi.overtime*2 or otime > now:
+        if (now - otime) > weiXinApi.overtime*2000 or otime > now:
             raise InvalidArgument('Order id error or overtime')
         session = endpoint_session()
         query = model_query(session, Order, filter=Order.oid == oid)
