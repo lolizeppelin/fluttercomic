@@ -94,10 +94,12 @@ class WeiXinApi(PlatFormClient):
 
         overtime = timeline + self.overtime
 
+        _random_str = random_string()
+
         data = {
             'appId': self.appid,
             'mch_id': self.mchid,
-            'nonceStr': random_string(),
+            'nonceStr': _random_str,
             'signType': 'MD5',
             'body': '%s-充值' % encodeutils.safe_decode(self.appname),
             'time_start': datetime.datetime.utcfromtimestamp(timeline).strftime('%Y%m%d%H%M%S'),
@@ -109,7 +111,7 @@ class WeiXinApi(PlatFormClient):
             'notify_url': req.path_url + '/%d' % oid,
             'trade_type': 'APP',
         }
-        return self._dict_to_xml_string(data)
+        return self._dict_to_xml_string(data), _random_str
 
     def _orderquery_xml(self, oid):
         data = {
@@ -124,7 +126,7 @@ class WeiXinApi(PlatFormClient):
 
     def payment(self, money, oid, timeline, req):
         money = int(money*self.roe)
-        data = self._unifiedorder_xml(money, oid, timeline, req)
+        data, random_str = self._unifiedorder_xml(money, oid, timeline, req)
         url = self.api + '/unifiedorder'
         resp = self.session.post(url, data=data,
                                  headers={"Content-Type": "application/xml"}, timeout=10)
@@ -135,7 +137,7 @@ class WeiXinApi(PlatFormClient):
         if result.get('result_code') != 'SUCCESS':
             LOG.error('Create WeiXin order fail')
             raise exceptions.CreateOrderError('Create WeiXin order fail')
-        return result['prepay_id']
+        return result['prepay_id'], result['sign'], random_str
 
     @staticmethod
     def esure_notify(data, order):

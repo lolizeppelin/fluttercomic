@@ -14,12 +14,15 @@ group = cfg.OptGroup(name='%s.%s' % (common.NAME, NAME), title='Fluttercomic Wei
 weixin_opts = [
     cfg.StrOpt('appId',
                help='WeiXin app Id'),
+    cfg.StrOpt('partnerId',
+               help='WeiXin app partner Id'),
     cfg.StrOpt('appName',
                help='WeiXin app name'),
-    cfg.StrOpt('secret',
-               help='WeiXin secret key'),
     cfg.StrOpt('mchId',
            help='WeiXin mch_id'),
+    cfg.StrOpt('package',
+               default='Sign=WXPay',
+               help='WeiXin package value'),
     cfg.StrOpt('cert',
                default='/etc/goperation/endpoints/wexin_cert.pem',
                help='WeiXin SSL apiclient cert'),
@@ -38,5 +41,8 @@ def register_opts(group):
                              choices=CONF[group.name].choices,
                              scale=CONF[group.name].scale,
                              currency=CONF[group.name].currency,
-                             appId=CONF[group.name].appId)
+                             appId=CONF[group.name].appId,
+                             partnerId=CONF[group.name].partnerId,
+                             package=CONF[group.name].package,
+                             )
 

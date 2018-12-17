@@ -103,15 +103,18 @@ class WeiXinRequest(PlatformsRequestBase):
         start_time = int(time.time())
 
         oid = uuidutils.Gkey()
+        prepay_id, sign, random_str = weiXinApi.payment(money, oid, start_time, req)
+
         session = endpoint_session()
-        prepay_id = weiXinApi.payment(money, oid, start_time, req)
         coins = self.order(session, weiXinApi, None,
                            uid, oid, money, cid, chapter,
                            ext={'prepay_id': prepay_id},
                            order_time=start_time)
         return resultutils.results(result='create paypal payment success',
                                    data=[dict(oid=oid, coins=coins, money=money,
-                                              prepay_id=prepay_id)])
+                                              weixin=dict(prepay_id, time=start_time,
+                                                          sign=sign, random=random_str))
+                                         ])
 
     def notify(self, req, oid, body=None):
         """这个接口由微信调用"""
@@ -130,7 +133,9 @@ class WeiXinRequest(PlatformsRequestBase):
 
 
     def esure(self, req, oid, body=None):
-        """这个接口由客户端调用"""
+        """
+        这个接口由客户端调用
+        """
         oid = int(oid)
         now = int(time.time()*1000)
         otime = uuidutils.Gprimarykey.timeformat(oid)
