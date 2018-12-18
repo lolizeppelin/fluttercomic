@@ -38,8 +38,8 @@ setup(
                       'simpleutil<1.1',
                       'simpleservice>=1.0',
                       'simpleservice<1.0',
-                      'simpleflow>=1.0',
-                      'simpleflow<1.1',
+                      'lxml>=3.2.5',
+                      'xmltodict>=0.10.1',
                       'ndg_httpsclient>=0.4.0'
                       ),
     name='fluttercomic',
