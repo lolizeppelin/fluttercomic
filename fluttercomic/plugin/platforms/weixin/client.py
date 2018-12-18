@@ -103,9 +103,9 @@ class WeiXinApi(PlatFormClient):
             'body': '%s-充值' % encodeutils.safe_decode(self.appname),
             'time_start': datetime.datetime.utcfromtimestamp(timeline).strftime('%Y%m%d%H%M%S'),
             'time_expire': datetime.datetime.utcfromtimestamp(overtime).strftime('%Y%m%d%H%M%S'),
-            'out_trade_no': encodeutils.safe_decode(str(oid)),
+            'out_trade_no': str(oid),
             'fee_type': self.currency,
-            'total_fee': money*100,
+            'total_fee': str(money*100),
             'spbill_create_ip': AuthFilter.client_addr(req),
             'notify_url': req.path_url + '/%d' % oid,
             'trade_type': 'APP',
@@ -117,7 +117,7 @@ class WeiXinApi(PlatFormClient):
             'appId': self.appid,
             'mch_id': self.mchid,
             'nonceStr': random_string(),
-            'transaction_id': encodeutils.safe_decode(str(oid)),
+            'transaction_id': str(oid),
         }
         return self._dict_to_xml_string(data)
 

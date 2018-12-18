@@ -27,7 +27,8 @@ weixin_opts = [
     cfg.StrOpt('key',
                default='/etc/goperation/endpoints/wexin_key.pem',
                help='WeiXin SSL apiclient key'),
-    cfg.StrOpt('overtime',
+    cfg.IntOpt('overtime',
+               min=60, max=7200,
                default=300,
                help='WeiXin Order overtime, by seconds'),
 ]
