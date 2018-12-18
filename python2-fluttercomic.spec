@@ -77,6 +77,8 @@ Group:          Development/Libraries
 Requires:       %{name} == %{version}
 Requires:       python-goperation-server >= 1.0
 Requires:       python-goperation-server < 1.1
+Requires:       python-lxml >= 3.2.5
+Requires:       python2-xmltodict >= 0.10.1
 
 
 %description server
