@@ -44,7 +44,6 @@ class WeiXinApi(PlatFormClient):
         super(WeiXinApi, self).__init__(NAME, conf)
 
         self.api = self.SANDBOXAPI if self.sandbox else self.API
-        self.recheck = self.SANDRECHACK if self.sandbox else self.RECHACK
 
         self.appid = conf.appId
         self.mchid = conf.mchId

@@ -56,7 +56,7 @@ FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
 
 NEWPAYMENT = {
     'type': 'object',
-    'required': ['money', 'uid', 'oid', 'url'],
+    'required': ['money', 'uid'],
     'properties':
         {
             'money': {'type': 'integer', 'minimum': 1},
@@ -87,7 +87,7 @@ ESUREPAY = {
 
 
 @singleton.singleton
-class WeiXinRequest(PlatformsRequestBase):
+class WeixinRequest(PlatformsRequestBase):
 
 
     def new(self, req, body=None):
@@ -130,7 +130,6 @@ class WeiXinRequest(PlatformsRequestBase):
         self.record(session, order, serial, extdata)
         return webob.Response(request=req, status=200, content_type='application/xml',
                               body=weiXinApi.success)
-
 
     def esure(self, req, oid, body=None):
         """
