@@ -73,6 +73,7 @@ class PlatformsRequestBase(MiddlewareContorller):
             user = query.one()
             order = Order(oid=oid, uid=uid,
                           sandbox=client.sandbox,
+                          currency=client.currency,
                           platform=client.name,
                           money=money,
                           serial=serial,
@@ -108,6 +109,7 @@ class PlatformsRequestBase(MiddlewareContorller):
                     coin=order.coin,
                     gift=order.gift,
                     money=order.money,
+                    currency=order.currency,
                     platform=order.platform,
                     time=order.time,
                     ftime=int(time.time()),

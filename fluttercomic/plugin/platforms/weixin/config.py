@@ -14,8 +14,6 @@ group = cfg.OptGroup(name='%s.%s' % (common.NAME, NAME), title='Fluttercomic Wei
 weixin_opts = [
     cfg.StrOpt('appId',
                help='WeiXin app Id'),
-    cfg.StrOpt('partnerId',
-               help='WeiXin app partner Id'),
     cfg.StrOpt('appName',
                help='WeiXin app name'),
     cfg.StrOpt('mchId',
@@ -42,7 +40,7 @@ def register_opts(group):
                              scale=CONF[group.name].scale,
                              currency=CONF[group.name].currency,
                              appId=CONF[group.name].appId,
-                             partnerId=CONF[group.name].partnerId,
+                             partnerId=CONF[group.name].mchId,
                              package=CONF[group.name].package,
                              )
 
