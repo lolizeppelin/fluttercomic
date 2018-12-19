@@ -18,6 +18,8 @@ weixin_opts = [
                help='WeiXin app name'),
     cfg.StrOpt('mchId',
            help='WeiXin mch_id'),
+    cfg.StrOpt('secret',
+               help='WeiXin secret key'),
     cfg.StrOpt('package',
                default='Sign=WXPay',
                help='WeiXin package value'),

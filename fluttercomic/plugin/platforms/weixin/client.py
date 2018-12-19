@@ -43,6 +43,7 @@ class WeiXinApi(PlatFormClient):
         self.api = self.SANDBOXAPI if self.sandbox else self.API
 
         self.appid = conf.appId
+        self.secret = conf.secret
         self.mchid = conf.mchId
         self.appname = conf.appName
         self.overtime = conf.overtime
@@ -65,8 +66,6 @@ class WeiXinApi(PlatFormClient):
 
     @staticmethod
     def dict_to_xml_string(data):
-        sign = WeiXinApi.calculate_signature(data)
-        data['sign'] = sign
         root = etree.Element('xml')
         root.text = '\n'
         for key in data:
@@ -82,11 +81,11 @@ class WeiXinApi(PlatFormClient):
 
     @property
     def sandbox_sign(self):
-        data = {'mch_id': self.mchid, 'nonce_str': random_string()}
-        data['sign'] = WeiXinApi.calculate_signature(data)
+        data = {'mch_id': self.mchid, 'nonce_str': random_string(), 'signType': 'MD5'}
+        data['sign'] = WeiXinApi.calculate_signature(data, self.secret)
         url = WeiXinApi.SANDBOXAPI + '/pay/getsignkey'
         resp = self.session.post(url, data=WeiXinApi.dict_to_xml_string(data),
-                                 daheaders={"Content-Type": "application/xml"}, timeout=3)
+                                 headers={"Content-Type": "application/xml"}, timeout=3)
         data = WeiXinApi.decrypt_xml_to_dict(resp.text)
         if data.get('return_code') != 'SUCCESS':
             LOG.error('Get WeiXin sandbox sign request fail: %s' % data.get('return_msg'))
@@ -115,7 +114,7 @@ class WeiXinApi(PlatFormClient):
             'notify_url': req.path_url + '/%d' % oid,
             'trade_type': 'APP',
         }
-        data['sign'] = self.sandbox_sign if self.sandbox else WeiXinApi.calculate_signature(data)
+        data['sign'] = self.sandbox_sign if self.sandbox else WeiXinApi.calculate_signature(data, self.secret)
         return self._dict_to_xml_string(data), _random_str
 
     def _orderquery_xml(self, oid):
@@ -130,7 +129,7 @@ class WeiXinApi(PlatFormClient):
     def _check_sign(self, data):
         if not self.sandbox:
             sign = data.pop('sign', None)
-            if not sign or sign != WeiXinApi.calculate_signature(data):
+            if not sign or sign != WeiXinApi.calculate_signature(data, self.secret):
                 raise exceptions.OrderError('Sign not the same')
 
     def _esure_notify(self, data, order):
