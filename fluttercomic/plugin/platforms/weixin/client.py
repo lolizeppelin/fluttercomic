@@ -9,10 +9,7 @@ import hashlib
 from lxml import etree
 import xmltodict
 
-
-from requests import sessions
-from requests.auth import HTTPBasicAuth
-from requests.adapters import HTTPAdapter
+import requests
 
 from simpleutil.log import log as logging
 from simpleutil.utils import jsonutils
@@ -37,8 +34,8 @@ def random_string(length=16):
 class WeiXinApi(PlatFormClient):
 
 
-    API = 'https://api.mch.weixin.qq.com/pay'
-    SANDBOXAPI = 'https://api.mch.weixin.qq.com/sandboxnew/pay'
+    API = 'https://api.mch.weixin.qq.com'
+    SANDBOXAPI = 'https://api.mch.weixin.qq.com/sandboxnew'
 
     def __init__(self, conf):
         super(WeiXinApi, self).__init__(NAME, conf)
@@ -50,11 +47,9 @@ class WeiXinApi(PlatFormClient):
         self.appname = conf.appName
         self.overtime = conf.overtime
 
-
     @property
     def success(self):
         return '<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>'
-
 
     @staticmethod
     def format_url(params, api_key=None):
@@ -69,7 +64,7 @@ class WeiXinApi(PlatFormClient):
         return encodeutils.safe_decode(hashlib.md5(url).hexdigest().upper())
 
     @staticmethod
-    def _dict_to_xml_string(data):
+    def dict_to_xml_string(data):
         sign = WeiXinApi.calculate_signature(data)
         data['sign'] = sign
         root = etree.Element('xml')
@@ -82,17 +77,24 @@ class WeiXinApi(PlatFormClient):
         return etree.tostring(root)
 
     @staticmethod
-    def _decrypt_xml_to_dict(buf):
-        data_dict = xmltodict.parse(encodeutils.safe_decode(buf))['xml']
-        sign = data_dict.pop('sign')
-        if sign != WeiXinApi.calculate_signature(data_dict):
-            raise exceptions.OrderError('Sign not the same, decrypt xml to dict fail')
-        return data_dict
+    def decrypt_xml_to_dict(buf):
+        return xmltodict.parse(encodeutils.safe_decode(buf))['xml']
+
+    @property
+    def sandbox_sign(self):
+        url = WeiXinApi.SANDBOXAPI + '/pay/getsignkey'
+        resp = self.session.post(url, headers={"Content-Type": "application/xml"}, timeout=3)
+        data = WeiXinApi.decrypt_xml_to_dict(resp.text)
+        if data.get('return_code') != 'SUCCESS':
+            LOG.error('Get WeiXin sandbox sign request fail: %s' % data.get('return_msg'))
+            raise exceptions.CreateOrderError('Get WeiXin sandbox sign fail')
+        if data.get('mch_id') != self.mchid:
+            raise exceptions.CreateOrderError('Get WeiXin sandbox sign find mch id not the same')
+        return data['sandbox_signkey']
 
     def _unifiedorder_xml(self, money, oid, timeline, req):
 
         overtime = timeline + self.overtime
-
         _random_str = random_string()
 
         data = {
@@ -110,6 +112,7 @@ class WeiXinApi(PlatFormClient):
             'notify_url': req.path_url + '/%d' % oid,
             'trade_type': 'APP',
         }
+        data['sign'] = self.sandbox_sign if self.sandbox else WeiXinApi.calculate_signature(data)
         return self._dict_to_xml_string(data), _random_str
 
     def _orderquery_xml(self, oid):
@@ -121,28 +124,17 @@ class WeiXinApi(PlatFormClient):
         }
         return self._dict_to_xml_string(data)
 
+    def _check_sign(self, data):
+        if not self.sandbox:
+            sign = data.pop('sign', None)
+            if not sign or sign != WeiXinApi.calculate_signature(data):
+                raise exceptions.OrderError('Sign not the same')
 
-
-    def payment(self, money, oid, timeline, req):
-        money = int(money*self.roe)
-        data, random_str = self._unifiedorder_xml(money, oid, timeline, req)
-        url = self.api + '/unifiedorder'
-        resp = self.session.post(url, data=data,
-                                 headers={"Content-Type": "application/xml"}, timeout=10)
-        result = WeiXinApi._decrypt_xml_to_dict(resp.text)
-        if result.get('return_code') != 'SUCCESS':
-            LOG.error('Create WeiXin request payment api fail: %s' % result.get('return_msg'))
-            raise exceptions.CreateOrderError('Create WeiXin order fail')
-        if result.get('result_code') != 'SUCCESS':
-            LOG.error('Create WeiXin order fail')
-            raise exceptions.CreateOrderError('Create WeiXin order fail')
-        return result['prepay_id'], result['sign'], random_str
-
-    @staticmethod
-    def esure_notify(data, order):
+    def _esure_notify(self, data, order):
         if LOG.isEnabledFor(logging.DEBUG):
             LOG.debug(data)
         data = WeiXinApi._decrypt_xml_to_dict(data)
+        self._check_sign(data)
         if data.get('return_code') != 'SUCCESS':
             LOG.error('Esure WeiXin order api request fail: %s' % data.get('return_msg'))
             raise exceptions.EsureOrderError('Esure WeiXin order error, request error')
@@ -162,9 +154,25 @@ class WeiXinApi(PlatFormClient):
             prepay_id = None
         return data['transaction_id'], {'prepay_id': prepay_id}
 
+    def payment(self, money, oid, timeline, req):
+        money = int(money*self.roe)
+        data, random_str = self._unifiedorder_xml(money, oid, timeline, req)
+        url = self.api + '/pay/unifiedorder'
+        resp = self.session.post(url, data=data,
+                                 headers={"Content-Type": "application/xml"}, timeout=10)
+        result = WeiXinApi.decrypt_xml_to_dict(resp.text)
+        if result.get('return_code') != 'SUCCESS':
+            LOG.error('Create WeiXin request payment api fail: %s' % result.get('return_msg'))
+            raise exceptions.CreateOrderError('Create WeiXin order fail')
+        if result.get('result_code') != 'SUCCESS':
+            LOG.error('Create WeiXin order fail')
+            raise exceptions.CreateOrderError('Create WeiXin order fail')
+        self._check_sign(result)
+        return result['prepay_id'], result['sign'], random_str
+
     def esure_order(self, order):
-        url = self.api + '/orderquery'
+        url = self.api + '/pay/orderquery'
         resp = self.session.get(url, data=self._orderquery_xml(order.oid),
                                 headers={"Content-Type": "application/xml"}, timeout=10)
-        return self.esure_notify(resp.text, order)
+        return self._esure_notify(resp.text, order)
 
