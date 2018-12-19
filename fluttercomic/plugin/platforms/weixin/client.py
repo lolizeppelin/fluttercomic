@@ -82,8 +82,11 @@ class WeiXinApi(PlatFormClient):
 
     @property
     def sandbox_sign(self):
+        data = {'mch_id': self.mchid, 'nonce_str': random_string()}
+        data['sign'] = WeiXinApi.calculate_signature(data)
         url = WeiXinApi.SANDBOXAPI + '/pay/getsignkey'
-        resp = self.session.post(url, headers={"Content-Type": "application/xml"}, timeout=3)
+        resp = self.session.post(url, data=WeiXinApi.dict_to_xml_string(data),
+                                 daheaders={"Content-Type": "application/xml"}, timeout=3)
         data = WeiXinApi.decrypt_xml_to_dict(resp.text)
         if data.get('return_code') != 'SUCCESS':
             LOG.error('Get WeiXin sandbox sign request fail: %s' % data.get('return_msg'))
