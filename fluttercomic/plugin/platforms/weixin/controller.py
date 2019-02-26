@@ -67,25 +67,6 @@ NEWPAYMENT = {
 
 }
 
-
-ESUREPAY = {
-    'type': 'object',
-    'required': ['paypal', 'uid'],
-    'properties':
-        {
-            'uid': {'type': 'integer', 'minimum': 1},
-            'paypal': {
-                'type': 'object',
-                'required': ['paymentID', 'payerID'],
-                'properties' : {
-                    'paymentID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
-                    'payerID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
-                }
-            },
-         }
-}
-
-
 @singleton.singleton
 class WeixinRequest(PlatformsRequestBase):
 

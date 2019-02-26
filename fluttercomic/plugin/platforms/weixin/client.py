@@ -132,10 +132,10 @@ class WeiXinApi(PlatFormClient):
             if not sign or sign != WeiXinApi.calculate_signature(data, self.secret):
                 raise exceptions.OrderError('Sign not the same')
 
-    def _esure_notify(self, data, order):
+    def esure_notify(self, data, order):
         if LOG.isEnabledFor(logging.DEBUG):
             LOG.debug(data)
-        data = WeiXinApi._decrypt_xml_to_dict(data)
+        data = WeiXinApi.decrypt_xml_to_dict(data)
         self._check_sign(data)
         if data.get('return_code') != 'SUCCESS':
             LOG.error('Esure WeiXin order api request fail: %s' % data.get('return_msg'))
@@ -176,5 +176,5 @@ class WeiXinApi(PlatFormClient):
         url = self.api + '/pay/orderquery'
         resp = self.session.get(url, data=self._orderquery_xml(order.oid),
                                 headers={"Content-Type": "application/xml"}, timeout=10)
-        return self._esure_notify(resp.text, order)
+        return self.esure_notify(resp.text, order)
 

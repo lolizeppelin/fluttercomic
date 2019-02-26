@@ -26,7 +26,7 @@ from goperation.manager.utils import resultutils
 
 from fluttercomic.api.wsgi.token import verify
 from fluttercomic.plugin.platforms.base import PlatformsRequestBase
-from fluttercomic.plugin.platforms.paypal.client import PayPalApi
+from fluttercomic.plugin.platforms.ipay.client import IPayApi
 
 from fluttercomic.models import Order
 from fluttercomic.models import User
@@ -43,7 +43,7 @@ LOG = logging.getLogger(__name__)
 
 CONF.register_group(config.group)
 config.register_opts(config.group)
-paypalApi = PayPalApi(CONF[config.group.name])
+iPayApi = IPayApi(CONF[config.group.name])
 
 FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
              NoResultFound: webob.exc.HTTPNotFound,
@@ -54,18 +54,14 @@ FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
 
 NEWPAYMENT = {
     'type': 'object',
-    'required': ['money', 'uid', 'oid', 'url'],
+    'required': ['money', 'uid'],
     'properties':
         {
             'money': {'type': 'integer', 'minimum': 1},
             'uid': {'type': 'integer', 'minimum': 1},
-            'oid': {'type': 'string',
-                    'minLength': 19, 'maxLength': 19,
-                    'pattern': '^[^0]\d+$'
-                    },
             'cid': {'type': 'integer', 'minimum': 0},
             'chapter': {'type': 'integer', 'minimum': 0},
-            'url': {'type': 'string', 'format': 'uri', 'pattern': "^(https?|wss?|ftp)://"},
+            'h5': {'type': 'boolean', 'description': '是否h5方式支付'},
          }
 
 }
@@ -73,45 +69,29 @@ NEWPAYMENT = {
 
 ESUREPAY = {
     'type': 'object',
-    'required': ['paypal', 'uid'],
+    'required': ['transtype', 'cporderid', 'transid',
+                 'appuserid', 'appid', 'waresid',
+                 'feetype', 'money','currency',
+                 'result', 'transtime'],
     'properties':
         {
-            'uid': {'type': 'integer', 'minimum': 1},
-            'paypal': {
-                'type': 'object',
-                'required': ['paymentID', 'payerID'],
-                'properties': {
-                    'paymentID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
-                    'payerID': {'type': 'string', 'minLength': 5, 'maxLength': 128},
-                }
-            },
+            'transtype': {'type': 'integer', 'minimum': 1},
+            'cporderid': {'type': 'integer', 'minimum': 1},
+            'transid': {'type': 'integer', 'minimum': 1},
+            'appuserid': {'type': 'integer', 'minimum': 1},
+            'appid': {'type': 'integer', 'minimum': 1},
+            'waresid': {'type': 'integer', 'minimum': 1},
+            'feetype': {'type': 'integer', 'minimum': 1},
+            'money': {'type': 'integer', 'minimum': 1},
+            'currency': {'type': 'integer', 'minimum': 1},
+            'result': {'type': 'integer', 'minimum': 1},
+            'transtime': {'type': 'integer', 'minimum': 1},
          }
 }
 
-
 @singleton.singleton
-class PaypalRequest(PlatformsRequestBase):
+class IPayRequest(PlatformsRequestBase):
 
-    def html(self, req, body=None):
-        """生成订单页面html"""
-        try:
-            money = int(req.params.get('money'))
-            uid = int(req.params.get('uid'))
-            cid = int(req.params.get('cid') or 0)
-            chapter = int(req.params.get('chapter') or 0)
-        except (ValueError, TypeError):
-            LOG.debug(str(req.params))
-            raise InvalidArgument('Some Value not int')
-
-        if money < 1:
-            raise InvalidArgument('Money less then 1')
-        if uid < 1:
-            raise InvalidArgument('Uid error')
-        if cid < 0 or chapter < 0:
-            raise InvalidArgument('cid or chapter less then 0')
-        url = req.url
-        oid = uuidutils.Gkey()
-        return paypalApi.html(oid=oid, uid=uid, cid=cid, chapter=chapter, money=money, url=url)
 
     def new(self, req, body=None):
         """发起订单"""
@@ -121,24 +101,21 @@ class PaypalRequest(PlatformsRequestBase):
         jsonutils.schema_validate(body, NEWPAYMENT)
         money = body.get('money')
         uid = body.get('uid')
-        oid = int(body.get('oid'))
         cid = body.get('cid')
         chapter = body.get('chapter')
-        cancel_url = body.get('url')
+        start_time = int(time.time())
 
-        now = int(time.time()*1000)
-        otime = uuidutils.Gprimarykey.timeformat(oid)
-        if (now - otime) > 600000 or otime > now:
-            LOG.debug('Oder time %d, now %d' % (otime, now))
-            raise InvalidArgument('Order id error')
+        oid = uuidutils.Gkey()
+        transid, url = iPayApi.payment(money, oid, uid, req)
 
-        serial = paypalApi.payment(money, cancel_url)
         session = endpoint_session()
-        coins = self.order(session, paypalApi, serial,
-                           uid, oid, money, cid, chapter)
-        return resultutils.results(result='create paypal payment success',
-                                   data=[dict(paypal=dict(paymentID=serial), oid=oid,
-                                              coins=coins, money=money)])
+        coins = self.order(session, IPayApi, transid,
+                           uid, oid, money, cid, chapter,
+                           order_time=start_time)
+
+        return resultutils.results(result='create ipay payment success',
+                                   data=[dict(ipay=dict(transid=transid, url=url),
+                                              oid=oid, coins=coins, money=money)])
 
     def notify(self, req, oid, body=None):
         body = body or {}
@@ -163,19 +140,10 @@ class PaypalRequest(PlatformsRequestBase):
             raise InvalidArgument('User id not the same')
         if order.serial != paypal.get('paymentID'):
             raise InvalidArgument('paymentID not the same')
-
-        def paypal_execute(extdata=None):
-            LOG.info('Call paypalApi execute order')
-            paypalApi.execute(paypal, order.money)
-            return extdata
-
         try:
-            self.record(session, order, None, None,
-                        on_transaction_call=paypal_execute)
+            self.record(session, order, None, None)
         except DBError:
-            LOG.error('Paypal save order %d to database fail' % order.oid)
-        except exceptions.EsureOrderError:
-            LOG.error('Call Paypal execute order fail')
+            LOG.error('Ipay save order %d to database fail' % order.oid)
             raise
 
         return resultutils.results(result='notify orde success',
