@@ -19,7 +19,7 @@ ipay_opts = [
                choices=['RSA'],
                help='ipay signtype appId'),
     cfg.StrOpt('ras_private',
-               default='/etc/goperation/endpoints/platforms/ras_private.key',
+               default='/etc/goperation/endpoints/platforms/ipay_private.key',
                help='ipay signtype ras private key file'),
     cfg.StrOpt('ras_public',
                default='/etc/goperation/endpoints/platforms/ipay_public.key',

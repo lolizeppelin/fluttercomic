@@ -34,7 +34,7 @@ from fluttercomic.models import RechargeLog
 
 from fluttercomic.api import endpoint_session
 
-from fluttercomic.plugin.platforms.paypal import config
+from fluttercomic.plugin.platforms.ipay import config
 from fluttercomic.plugin.platforms import exceptions
 
 CONF = cfg.CONF
