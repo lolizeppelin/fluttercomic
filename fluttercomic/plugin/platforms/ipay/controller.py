@@ -90,7 +90,7 @@ ESUREPAY = {
 }
 
 @singleton.singleton
-class IPayRequest(PlatformsRequestBase):
+class IpayRequest(PlatformsRequestBase):
 
 
     def new(self, req, body=None):

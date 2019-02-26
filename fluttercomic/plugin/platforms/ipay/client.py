@@ -1,8 +1,8 @@
-import copy
 from collections import OrderedDict
 from urllib import unquote
 from urllib import urlencode
 
+import base64
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
@@ -56,7 +56,9 @@ class IPayApi(PlatFormClient):
                                                                   password=None,
                                                                   backend=default_backend())
         with open(conf.ras_public) as f:
-            self.public_key = serialization.load_der_public_key(data=f.read(), backend=default_backend())
+            key = ''.join(f.read().strip().split('\n')[1:-1])
+            self.public_key = serialization.load_der_public_key(data=base64.b64decode(key),
+                                                                backend=default_backend())
 
     @property
     def _currency(self):
