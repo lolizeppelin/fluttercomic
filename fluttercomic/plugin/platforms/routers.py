@@ -49,6 +49,10 @@ class Routers(router.RoutersBase):
                    path='/%s/orders/platforms/%s/{oid}' % (common.NAME, platform.lower()),
                    get_action='esure')
 
+            self._add_resource(mapper, controller,
+                   path='/%s/orders/platforms/%s/{oid}' % (common.NAME, platform.lower()),
+                   get_action='result')
+
             ctrl_instance.extrouters(self, mapper, controller)
 
             # self._add_resource(mapper, controller,

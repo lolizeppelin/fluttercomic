@@ -24,6 +24,12 @@ ipay_opts = [
     cfg.StrOpt('ras_public',
                default='/etc/goperation/endpoints/platforms/ipay_public.key',
                help='ipay signtype ras public key file'),
+    cfg.UrlOpt('url_sucess',
+               help='ipay pay success request url'
+               ),
+    cfg.UrlOpt('url_fail',
+               help='ipay pay fail request url'
+               ),
 ]
 
 

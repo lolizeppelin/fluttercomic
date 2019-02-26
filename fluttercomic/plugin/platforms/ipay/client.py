@@ -21,49 +21,6 @@ from fluttercomic.plugin.platforms.paypal.config import NAME
 LOG = logging.getLogger(__name__)
 
 
-HTMLTEMPLATE = '''
-<script src="https://www.paypalobjects.com/api/checkout.js"></script>
-
-<div id="paypal-button"></div>
-
-<script>
-
-    paypal.Button.render({
-        style: {'label': 'buynow', 'size': 'responsive'},
-        env: '%(env)s',
-        payment: function (data, actions) {
-            return actions.request({
-                    method: "post",
-                    url: '/n1.0/fluttercomic/orders/platforms/paypal',
-                    json: {money: %(money)d, uid: %(uid)d, oid: '%(oid)d', cid: %(cid)d, chapter: %(chapter)d, url: '%(url)s'},
-                })
-                .then(function (res) {
-                    return res.data[0].paypal.paymentID;
-                });
-        },
-        onAuthorize: function (data, actions) {
-            return actions.request({
-                    method: "post",
-                    url: '/n1.0/fluttercomic/orders/platforms/paypal/%(oid)d',
-                    json: {paypal: { paymentID: data.paymentID, payerID: data.payerID}, uid: %(uid)d},
-                })
-                .then(function (res) {
-                    window.postMessage(JSON.stringify({result: 'paypal pay success', success: true,
-                    coins: res.data[0].coins, paypal: { paymentID: data.paymentID, payerID: data.payerID},
-                    oid: %(oid)d}));
-                });
-        },
-        onCancel: function(data, actions) {
-            window.postMessage(JSON.stringify({success: false, result: 'paypal has been cancel'}));
-        },
-        onError: function (err) {
-           window.postMessage(JSON.stringify({success: false, result: 'paypal catch error'}));
-        }
-    }, '#paypal-button');
-</script>
-'''
-
-
 class IPayApi(PlatFormClient):
 
     ORDERURL = 'https://cp.iapppay.com/payapi/order'

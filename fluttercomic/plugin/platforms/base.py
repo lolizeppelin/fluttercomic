@@ -60,6 +60,9 @@ class PlatformsRequestBase(MiddlewareContorller):
     def esure(self, req, oid, body=None):
         raise NotImplementedError
 
+    def result(self, req, oid, body=None):
+        raise NotImplementedError
+
     def notify(self, req, oid, body=None):
         raise NotImplementedError
 
@@ -134,7 +137,7 @@ class PlatformsRequestBase(MiddlewareContorller):
                 LOG.error('Recodr duplicate recharge order fail')
 
 
-@six.add_metaclass(abc.ABCMeta)
+# @six.add_metaclass(abc.ABCMeta)
 class PlatFormClient(object):
 
     def __init__(self, name, conf):
