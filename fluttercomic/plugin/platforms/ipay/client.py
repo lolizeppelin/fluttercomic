@@ -51,11 +51,11 @@ class IPayApi(PlatFormClient):
         self.url_fail = conf.url_fail
         self.signtype = conf.signtype
 
-        with open(conf.pem) as f:
+        with open(conf.ras_private) as f:
             self.private_key = serialization.load_pem_private_key(data=f.read(),
                                                                   password=None,
                                                                   backend=default_backend())
-        with open(conf.pem) as f:
+        with open(conf.ras_public) as f:
             self.public_key = serialization.load_der_public_key(data=f.read(), backend=default_backend())
 
     @property
