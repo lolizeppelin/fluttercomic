@@ -32,12 +32,12 @@ class IPayApi(PlatFormClient):
     HASHES = hashes.MD5
 
     # HASHES = hashes.SHA256
-    # RASPRIVATEPADING = padding.PSS(mgf=padding.MGF1(HASHES()), salt_length=padding.PSS.MAX_LENGTH)
+    # RSAPRIVATEPADING = padding.PSS(mgf=padding.MGF1(HASHES()), salt_length=padding.PSS.MAX_LENGTH)
 
-    RASPRIVATEPADING = padding.PKCS1v15()
+    RSAPRIVATEPADING = padding.PKCS1v15()
 
-    # RASPUBLICPADING = padding.PKCS1v15()
-    RASPUBLICPADING = padding.OAEP(mgf=padding.MGF1(algorithm=HASHES()),
+    # RSAPUBLICPADING = padding.PKCS1v15()
+    RSAPUBLICPADING = padding.OAEP(mgf=padding.MGF1(algorithm=HASHES()),
                                    algorithm=HASHES(),label=None)
 
 
@@ -52,11 +52,11 @@ class IPayApi(PlatFormClient):
         self.url_fail = conf.url_fail
         self.signtype = conf.signtype
 
-        with open(conf.ras_private) as f:
+        with open(conf.rsa_private) as f:
             self.private_key = serialization.load_pem_private_key(data=f.read(),
                                                                   password=None,
                                                                   backend=default_backend())
-        with open(conf.ras_public) as f:
+        with open(conf.rsa_public) as f:
             key = ''.join(f.read().strip().split('\n')[1:-1])
             self.public_key = serialization.load_der_public_key(data=base64.b64decode(key),
                                                                 backend=default_backend())
@@ -67,20 +67,20 @@ class IPayApi(PlatFormClient):
 
 
     def mksign(self, data, t):
-        if t == 'RAS':
+        if t == 'RSA':
             try:
-                return self.private_key.sign(data, IPayApi.RASPRIVATEPADING, IPayApi.HASHES())
+                return self.private_key.sign(data, IPayApi.RSAPRIVATEPADING, IPayApi.HASHES())
             except Exception as e:
                 LOG.error('Rsa sign error: %s' % e.__class__.__name__)
-                raise exceptions.OrderError('ras sign fail')
+                raise exceptions.OrderError('RSA sign fail')
         else:
             # TODO raise type error
             raise exceptions.OrderError('sign type error')
 
     def verify(self, data, sign, t):
-        if t == 'RAS':
+        if t == 'RSA':
             try:
-                self.public_key.verify(sign, data, IPayApi.RASPUBLICPADING, IPayApi.HASHES())
+                self.public_key.verify(sign, data, IPayApi.RSAPUBLICPADING, IPayApi.HASHES())
             except InvalidSignature:
                 LOG.error('Rsa verify fail')
                 return False
@@ -156,6 +156,6 @@ class IPayApi(PlatFormClient):
         signtype = results.get('signtype')
         if not self.verify(results.get(self.TRANSDATA), sign, signtype):
             # TODO verify fail
-            raise exceptions.OrderError('ras verify fail')
+            raise exceptions.OrderError('RSA verify fail')
 
         return transid, self.ipay_url(transid)
