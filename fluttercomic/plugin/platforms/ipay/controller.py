@@ -105,7 +105,7 @@ class IpayRequest(PlatformsRequestBase):
         chapter = body.get('chapter')
         start_time = int(time.time())
         oid = uuidutils.Gkey()
-        transid, url = iPayApi.payment(money, oid, uid, req)
+        transid, url = iPayApi.payment(money, oid, req)
 
         session = endpoint_session()
         coins = self.order(session, IPayApi, transid,

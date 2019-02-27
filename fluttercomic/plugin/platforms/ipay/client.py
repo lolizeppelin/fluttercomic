@@ -47,6 +47,7 @@ class IPayApi(PlatFormClient):
         super(IPayApi, self).__init__(NAME, conf)
 
         self.appid = conf.appId
+        self.appuid = conf.appUid
         self.waresid = conf.waresId
         self.url_sucess = conf.url_sucess
         self.url_fail = conf.url_fail
@@ -121,7 +122,7 @@ class IPayApi(PlatFormClient):
             exceptions.OrderError('url decode key not found')
         return results
 
-    def payment(self, money, oid, uid, req):
+    def payment(self, money, oid, req):
         money = '%.2f' % (money*self.roe)
         url = self.ORDERURL
 
@@ -132,11 +133,12 @@ class IPayApi(PlatFormClient):
         data['cporderid'] = str(oid)
         data['price'] = money
         data['currency'] = self._currency
-        data['appuserid'] = str(uid)
+        data['appuserid'] = self.appuid
         data['notifyurl'] = req.path_url + '/%d' % oid
 
         transdata = jsonutils.dumps(data)
         sign = self.mksign(transdata, self.signtype)
+        LOG.debug('transdata is %s' % transdata)
 
         params=OrderedDict(transdata=transdata)
         params['sign'] = sign
@@ -146,8 +148,8 @@ class IPayApi(PlatFormClient):
         results = IPayApi.decode(resp.text, self.TRANSDATA)
         transdata =  jsonutils.loads_as_bytes(results.get(self.TRANSDATA))
         if transdata.get('code'):
-            msg = transdata.get('errmsg')
-            LOG.error('ipay create payment fail %s' % str(msg))
+            LOG.error('ipay create payment fail %s, code %s' % (transdata.get('errmsg'),
+                                                                str(transdata.get('code'))))
             raise exceptions.CreateOrderError('Create ipay payment error')
         transid = transdata.get('transid')
         sign = results.get('sign')
