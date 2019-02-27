@@ -47,6 +47,7 @@ class IPayApi(PlatFormClient):
         super(IPayApi, self).__init__(NAME, conf)
 
         self.appid = conf.appId
+        self.waresid = conf.waresId
         self.url_sucess = conf.url_sucess
         self.url_fail = conf.url_fail
         self.signtype = conf.signtype
@@ -128,12 +129,12 @@ class IPayApi(PlatFormClient):
 
         data = OrderedDict()
         data['appid'] = self.appid
-        data['waresid'] = self.appid
-        data['waresname'] = 'comic'
+        data['waresid'] = self.waresid
+        # data['waresname'] = 'comic'
         data['cporderid'] = str(oid)
         data['price'] = money
         data['currency'] = self._currency
-        data['appuserid'] = uid
+        data['appuserid'] = str(uid)
         data['notifyurl'] = req.path_url + '/%d' % oid
 
         transdata = jsonutils.dumps(data)

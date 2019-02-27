@@ -15,6 +15,7 @@ paypal_opts = [
     cfg.StrOpt('clientID',
                help='paypal clientID'),
     cfg.StrOpt('secret',
+               secret=True,
                help='paypal secret'),
 ]
 

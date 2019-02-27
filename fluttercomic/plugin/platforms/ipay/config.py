@@ -14,6 +14,8 @@ group = cfg.OptGroup(name='%s.%s' % (common.NAME, NAME), title='Fluttercomic Pay
 ipay_opts = [
     cfg.StrOpt('appId',
                help='ipay appId'),
+    cfg.StrOpt('waresId',
+               help='ipay waresId'),
     cfg.StrOpt('signtype',
                default='RSA',
                choices=['RSA'],
