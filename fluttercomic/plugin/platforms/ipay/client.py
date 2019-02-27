@@ -1,18 +1,16 @@
 from collections import OrderedDict
 from urllib import unquote
 from urllib import urlencode
-import simplejson
 
 import base64
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
-from cryptography.exceptions import  InvalidSignature
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from simpleutil.log import log as logging
 from simpleutil.utils import jsonutils
-# from simpleutil.utils import encodeutils
 
 from fluttercomic.plugin.platforms import exceptions
 from fluttercomic.plugin.platforms.base import PlatFormClient
@@ -23,6 +21,8 @@ LOG = logging.getLogger(__name__)
 
 class IPayApi(PlatFormClient):
 
+    CURRENCYS = {'CNY': 'RMB'}
+
     ORDERURL = 'https://cp.iapppay.com/payapi/order'
     RESULTSURL = 'https://cp.iapppay.com/payapi'
     GWURL = 'https://web.iapppay.com/h5/gateway'
@@ -30,18 +30,8 @@ class IPayApi(PlatFormClient):
     TRANSDATA = 'transdata'
 
     HASHES = hashes.MD5
-
-    # HASHES = hashes.SHA256
-    # RSAPRIVATEPADING = padding.PSS(mgf=padding.MGF1(HASHES()), salt_length=padding.PSS.MAX_LENGTH)
-
     RSAPRIVATEPADING = padding.PKCS1v15()
-
-    # RSAPUBLICPADING = padding.PKCS1v15()
-    RSAPUBLICPADING = padding.OAEP(mgf=padding.MGF1(algorithm=HASHES()),
-                                   algorithm=HASHES(),label=None)
-
-
-    CURRENCYS = {'CNY': 'RMB'}
+    RSAPUBLICPADING = padding.PKCS1v15()
 
     def __init__(self, conf):
         super(IPayApi, self).__init__(NAME, conf)
@@ -60,6 +50,7 @@ class IPayApi(PlatFormClient):
         with open(conf.rsa_public) as f:
             self.public_key = serialization.load_pem_public_key(data=f.read(),
                                                                 backend=default_backend())
+
     @property
     def _currency(self):
         return IPayApi.CURRENCYS.get(self.currency, self.currency)
@@ -82,7 +73,7 @@ class IPayApi(PlatFormClient):
                 self.public_key.verify(base64.b64decode(sign), data,
                                        IPayApi.RSAPUBLICPADING, IPayApi.HASHES())
             except InvalidSignature:
-                LOG.error('Rsa verify fail')
+                LOG.error('Rsa verify fail, invalid sign')
                 return False
             except Exception as e:
                 LOG.error('Rsa verify error: %s' % e.__class__.__name__)
@@ -145,14 +136,14 @@ class IPayApi(PlatFormClient):
         sign = self.mksign(transdata, self.signtype)
         LOG.debug('transdata is %s' % transdata)
 
-        params=OrderedDict(transdata=transdata)
+        params = OrderedDict(transdata=transdata)
         params['sign'] = sign
         params['signtype'] = self.signtype
 
         resp = self.session.post(self.ORDERURL, data=urlencode(params), timeout=10)
-        LOG.debug('response text ' % resp.text)
+        LOG.debug('response text %s' % str(resp.text))
         results = IPayApi.decode(resp.text, self.TRANSDATA)
-        transdata =  jsonutils.loads_as_bytes(results.get(self.TRANSDATA))
+        transdata = jsonutils.loads_as_bytes(results.get(self.TRANSDATA))
         if transdata.get('code'):
             LOG.error('ipay create payment fail %s, code %s' % (transdata.get('errmsg'),
                                                                 str(transdata.get('code'))))
