@@ -60,16 +60,14 @@ class IPayApi(PlatFormClient):
             key = ''.join(f.read().strip().split('\n')[1:-1])
             self.public_key = serialization.load_der_public_key(data=base64.b64decode(key),
                                                                 backend=default_backend())
-
     @property
     def _currency(self):
         return IPayApi.CURRENCYS.get(self.currency, self.currency)
 
-
     def mksign(self, data, t):
         if t == 'RSA':
             try:
-                return self.private_key.sign(data, IPayApi.RSAPRIVATEPADING, IPayApi.HASHES())
+                return self.private_key.sign(data.encode('utf-8'), IPayApi.RSAPRIVATEPADING, IPayApi.HASHES())
             except Exception as e:
                 LOG.error('Rsa sign error: %s' % e.__class__.__name__)
                 raise exceptions.OrderError('RSA sign fail')
@@ -110,7 +108,7 @@ class IPayApi(PlatFormClient):
 
     @staticmethod
     def decode(text, key):
-        data = unquote(text).decode('utf8').split('&')
+        data = unquote(text.encode('utf-8')).split('&')
         ok = False if key else True
         results = OrderedDict()
         for r in data:
@@ -139,12 +137,12 @@ class IPayApi(PlatFormClient):
 
         transdata = jsonutils.dumps(data)
         sign = self.mksign(transdata, self.signtype)
-        LOG.error('rsa sign' + sign)
-        resp = self.session.post(url,
-                                 params=dict(transdata=transdata, sign=sign, signtype=self.signtype),
-                                 headers={"Content-Type": "application/json"},
-                                 timeout=10)
 
+        params=OrderedDict(transdata=transdata)
+        params['sign'] = sign
+        params['signtype'] = self.signtype
+
+        resp = self.session.post(url, params=params, headers={"Content-Type": "application/json"}, timeout=10)
         results = IPayApi.decode(resp.text, self.TRANSDATA)
         transdata =  jsonutils.loads_as_bytes(results.get(self.TRANSDATA))
         if transdata.get('code'):
