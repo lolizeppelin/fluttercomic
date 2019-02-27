@@ -108,7 +108,7 @@ class IpayRequest(PlatformsRequestBase):
         transid, url = iPayApi.payment(money, oid, req)
 
         session = endpoint_session()
-        coins = self.order(session, IPayApi, transid,
+        coins = self.order(session, iPayApi, transid,
                            uid, oid, money, cid, chapter,
                            order_time=start_time)
 
