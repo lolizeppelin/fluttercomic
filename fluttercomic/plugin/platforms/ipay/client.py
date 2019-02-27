@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from urllib import unquote
 from urllib import urlencode
+import simplejson
 
 import base64
 from cryptography.hazmat.backends import default_backend
@@ -12,7 +13,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from simpleutil.log import log as logging
 from simpleutil.utils import jsonutils
-from simpleutil.utils import encodeutils
+# from simpleutil.utils import encodeutils
 
 from fluttercomic.plugin.platforms import exceptions
 from fluttercomic.plugin.platforms.base import PlatFormClient
@@ -20,6 +21,20 @@ from fluttercomic.plugin.platforms.paypal.config import NAME
 
 LOG = logging.getLogger(__name__)
 
+
+class PrettyFloat(float):
+
+    def __repr__(self):
+        return '%.15g' % self
+
+def pretty_floats(obj):
+    if isinstance(obj, float):
+        return PrettyFloat(obj)
+    elif isinstance(obj, (dict, OrderedDict)):
+        return dict((k, pretty_floats(v)) for k, v in obj.items())
+    elif isinstance(obj, (list, tuple)):
+        return map(pretty_floats, obj)  # in Python3 do: list(map(pretty_floats, obj))
+    return obj
 
 class IPayApi(PlatFormClient):
 
@@ -123,7 +138,7 @@ class IPayApi(PlatFormClient):
         return results
 
     def payment(self, money, oid, req):
-        money = '%.2f' % (money*self.roe)
+        money = money*self.roe, 2
         url = self.ORDERURL
 
         data = OrderedDict()
@@ -136,7 +151,8 @@ class IPayApi(PlatFormClient):
         data['appuserid'] = self.appuid
         data['notifyurl'] = req.path_url + '/%d' % oid
 
-        transdata = jsonutils.dumps(data)
+        # transdata = jsonutils.dumps(data)
+        transdata = simplejson.dumps(pretty_floats(data))
         sign = self.mksign(transdata, self.signtype)
         LOG.debug('transdata is %s' % transdata)
 
