@@ -14,7 +14,7 @@ group = cfg.OptGroup(name='%s.%s' % (common.NAME, NAME), title='Fluttercomic Pay
 ipay_opts = [
     cfg.StrOpt('appId',
                help='ipay appId'),
-    cfg.StrOpt('waresId',
+    cfg.IntOpt('waresId',
                help='ipay waresId'),
     cfg.StrOpt('signtype',
                default='RSA',
@@ -38,7 +38,7 @@ ipay_opts = [
 def register_opts(group):
     CONF.register_opts(ipay_opts + config.platform_opts, group)
     config.register_platform(name=NAME,
-                             choices=CONF[group.name].choices,
+                             choices=list(set(CONF[group.name].choices)),
                              scale=CONF[group.name].scale,
                              currency=CONF[group.name].currency,
                              appId=CONF[group.name].appId,

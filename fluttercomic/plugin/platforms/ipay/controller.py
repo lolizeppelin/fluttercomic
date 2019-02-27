@@ -104,9 +104,6 @@ class IpayRequest(PlatformsRequestBase):
         cid = body.get('cid')
         chapter = body.get('chapter')
         start_time = int(time.time())
-
-        LOG.error('money')
-
         oid = uuidutils.Gkey()
         transid, url = iPayApi.payment(money, oid, uid, req)
 
