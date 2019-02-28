@@ -48,7 +48,10 @@ iPayApi = IPayApi(CONF[config.group.name])
 FAULT_MAP = {InvalidArgument: webob.exc.HTTPClientError,
              NoResultFound: webob.exc.HTTPNotFound,
              MultipleResultsFound: webob.exc.HTTPInternalServerError,
-             exceptions.EsureOrderError: webob.exc.HTTPInternalServerError
+             exceptions.OrderError: webob.exc.HTTPInternalServerError,
+             exceptions.VerifyOrderError: webob.exc.HTTPInternalServerError,
+             exceptions.SignOrderError: webob.exc.HTTPInternalServerError,
+             exceptions.EsureOrderError: webob.exc.HTTPInternalServerError,
              }
 
 

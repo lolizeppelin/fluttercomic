@@ -62,9 +62,8 @@ class IPayApi(PlatFormClient):
                 return base64.b64encode(sign)
             except Exception as e:
                 LOG.exception('Rsa sign error: %s' % e.__class__.__name__)
-                raise exceptions.OrderError('RSA sign fail')
+                raise exceptions.SignOrderError('RSA sign fail')
         else:
-            # TODO raise type error
             raise exceptions.OrderError('sign type error')
 
     def verify(self, data, sign, t):
@@ -80,8 +79,7 @@ class IPayApi(PlatFormClient):
                 return False
             return True
         else:
-            # TODO raise type error
-            raise exceptions.OrderError('sign type error on verify')
+            raise exceptions.VerifyOrderError('sign type error on verify')
 
     def ipay_url(self, transid):
         data = OrderedDict()
@@ -110,12 +108,11 @@ class IPayApi(PlatFormClient):
                     v = r[i+1:]
                     break
             else:
-                raise exceptions.OrderError('Can not split url data')
+                raise exceptions.OrderError('Can not decode url data')
             if k == key:
                 ok = True
             results[k] = v
         if not ok:
-            # TODO raise not found
             exceptions.OrderError('url decode key not found')
         return results
 
@@ -147,13 +144,12 @@ class IPayApi(PlatFormClient):
         if transdata.get('code'):
             LOG.error('ipay create payment fail %s, code %s' % (transdata.get('errmsg'),
                                                                 str(transdata.get('code'))))
-            raise exceptions.CreateOrderError('Create ipay payment error')
+            raise exceptions.CreateOrderError('Create ipay payment result is fail')
         LOG.debug('Create new payment success')
         transid = transdata.get('transid')
         sign = results.get('sign')
         signtype = results.get('signtype')
         if not self.verify(results.get(self.TRANSDATA), sign, signtype):
-            # TODO verify fail
-            raise exceptions.OrderError('RSA verify fail')
+            raise exceptions.VerifyOrderError('RSA verify payment result sign error')
 
         return transid, self.ipay_url(transid)

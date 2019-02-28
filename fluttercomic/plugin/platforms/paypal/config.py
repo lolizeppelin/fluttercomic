@@ -23,7 +23,7 @@ paypal_opts = [
 def register_opts(group):
     CONF.register_opts(paypal_opts + config.platform_opts, group)
     config.register_platform(name=NAME,
-                             choices=list(set(CONF[group.name].choices)),
+                             choices=CONF[group.name].choices,
                              scale=CONF[group.name].scale,
                              currency=CONF[group.name].currency)
 

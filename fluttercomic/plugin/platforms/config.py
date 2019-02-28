@@ -37,6 +37,7 @@ def register_opts(group):
 
 
 def register_platform(name, choices, scale, currency, **kwargs):
+    choices = sorted(list(set(choices)))
     base_opt = dict(choices=choices, scale=scale, currency=currency)
     base_opt.update(kwargs)
     platforms.Platforms[name] = base_opt
