@@ -86,13 +86,18 @@ class WeiXinApi(PlatFormClient):
         url = WeiXinApi.SANDBOXAPI + '/pay/getsignkey'
         resp = self.session.post(url, data=WeiXinApi.dict_to_xml_string(data),
                                  headers={"Content-Type": "application/xml"}, timeout=3)
-        data = WeiXinApi.decrypt_xml_to_dict(resp.text)
-        if data.get('return_code') != 'SUCCESS':
-            LOG.error('Get WeiXin sandbox sign request fail: %s' % data.get('return_msg'))
+        rdata = WeiXinApi.decrypt_xml_to_dict(resp.text)
+        if rdata.get('return_code') != 'SUCCESS':
+            # 微信sandbox接口 msg字段retmsg  不统一
+            LOG.error('Get WeiXin sandbox sign request fail: %s' % data.get('retmsg'))
+            LOG.debug('mch_id %s, nonce %s sign %s' % (data['mch_id'], data['nonce_str'], data['sign']))
             raise exceptions.CreateOrderError('Get WeiXin sandbox sign fail')
-        if data.get('mch_id') != self.mchid:
+        if rdata.get('mch_id') != self.mchid:
+            LOG.error('Get WeiXin sandbox sign return mch_id not the same, local %s, bug recv %s' %
+                      (data['mch_id'], rdata['nonce_str']))
+            LOG.debug('mch_id %s, nonce %s sign %s' % (data['mch_id'], data['nonce_str'], data['sign']))
             raise exceptions.CreateOrderError('Get WeiXin sandbox sign find mch id not the same')
-        return data['sandbox_signkey']
+        return rdata['sandbox_signkey']
 
     def _unifiedorder_xml(self, money, oid, timeline, req):
 
@@ -115,7 +120,7 @@ class WeiXinApi(PlatFormClient):
             'trade_type': 'APP',
         }
         data['sign'] = self.sandbox_sign if self.sandbox else WeiXinApi.calculate_signature(data, self.secret)
-        return self._dict_to_xml_string(data), _random_str
+        return self.dict_to_xml_string(data), _random_str
 
     def _orderquery_xml(self, oid):
         data = {
@@ -124,7 +129,7 @@ class WeiXinApi(PlatFormClient):
             'nonceStr': random_string(),
             'transaction_id': str(oid),
         }
-        return self._dict_to_xml_string(data)
+        return self.dict_to_xml_string(data)
 
     def _check_sign(self, data):
         if not self.sandbox:
