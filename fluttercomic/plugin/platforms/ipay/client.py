@@ -85,7 +85,7 @@ class IPayApi(PlatFormClient):
     def ipay_url(self, transid):
 
         if not self.h5:
-            return None
+            return ''
 
         if not self.url_h or not self.url_r:
             raise ValueError('Ipay with h5 need success url and fail url')
@@ -161,4 +161,4 @@ class IPayApi(PlatFormClient):
         if not self.verify(results.get(self.TRANSDATA), sign, signtype):
             raise exceptions.VerifyOrderError('RSA verify payment result sign error')
 
-        return transid, self.ipay_url(transid), self.url_r, self.url_h
+        return str(transid), self.ipay_url(transid), self.url_r or '', self.url_h or ''
