@@ -42,6 +42,7 @@ class IPayApi(PlatFormClient):
         self.url_r = conf.url_r
         self.url_h = conf.url_h
         self.signtype = conf.signtype
+        self.h5 = conf.h5
 
         with open(conf.rsa_private) as f:
             self.private_key = serialization.load_pem_private_key(data=f.read(),
@@ -81,9 +82,9 @@ class IPayApi(PlatFormClient):
         else:
             raise exceptions.VerifyOrderError('sign type error on verify')
 
-    def ipay_url(self, transid, h5=False):
+    def ipay_url(self, transid):
 
-        if not h5:
+        if not self.h5:
             return None
 
         if not self.url_h or not self.url_r:
@@ -124,7 +125,7 @@ class IPayApi(PlatFormClient):
             exceptions.OrderError('url decode key not found')
         return results
 
-    def payment(self, money, oid, req, h5=False):
+    def payment(self, money, oid, req):
         money = round(money*self.roe, 2)
 
         data = OrderedDict()
@@ -160,4 +161,4 @@ class IPayApi(PlatFormClient):
         if not self.verify(results.get(self.TRANSDATA), sign, signtype):
             raise exceptions.VerifyOrderError('RSA verify payment result sign error')
 
-        return transid, self.ipay_url(transid, h5), self.url_r, self.url_h
+        return transid, self.ipay_url(transid), self.url_r, self.url_h

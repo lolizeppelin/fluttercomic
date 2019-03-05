@@ -64,7 +64,7 @@ NEWPAYMENT = {
             'uid': {'type': 'integer', 'minimum': 1},
             'cid': {'type': 'integer', 'minimum': 0},
             'chapter': {'type': 'integer', 'minimum': 0},
-            'h5': {'type': 'boolean', 'description': '是否h5方式支付'},
+            # 'h5': {'type': 'boolean', 'description': '是否h5方式支付'},
          }
 
 }
@@ -106,10 +106,10 @@ class IpayRequest(PlatformsRequestBase):
         uid = body.get('uid')
         cid = body.get('cid')
         chapter = body.get('chapter')
-        h5 = bool(body.get('h5'))
+        # h5 = bool(body.get('h5'))
         start_time = int(time.time())
         oid = uuidutils.Gkey()
-        transid, url, url_r, url_h = iPayApi.payment(money, oid, req, h5)
+        transid, url, url_r, url_h = iPayApi.payment(money, oid, req)
         session = endpoint_session()
         coins = self.order(session, iPayApi, transid,
                            uid, oid, money, cid, chapter,
