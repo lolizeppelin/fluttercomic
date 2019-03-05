@@ -106,17 +106,18 @@ class IpayRequest(PlatformsRequestBase):
         uid = body.get('uid')
         cid = body.get('cid')
         chapter = body.get('chapter')
+        h5 = bool(body.get('h5'))
         start_time = int(time.time())
         oid = uuidutils.Gkey()
-        transid, url = iPayApi.payment(money, oid, req)
-
+        transid, url, url_r, url_h = iPayApi.payment(money, oid, req, h5)
         session = endpoint_session()
         coins = self.order(session, iPayApi, transid,
                            uid, oid, money, cid, chapter,
                            order_time=start_time)
 
         return resultutils.results(result='create ipay payment success',
-                                   data=[dict(ipay=dict(transid=transid, url=url),
+                                   data=[dict(ipay=dict(transid=transid, url=url,
+                                                        url_r=url_r, url_h=url_h),
                                               oid=oid, coins=coins, money=money)])
 
     def notify(self, req, oid, body=None):

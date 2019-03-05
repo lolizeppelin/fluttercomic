@@ -39,8 +39,8 @@ class IPayApi(PlatFormClient):
         self.appid = conf.appId
         self.appuid = conf.appUid
         self.waresid = conf.waresId
-        self.url_sucess = conf.url_sucess
-        self.url_fail = conf.url_fail
+        self.url_r = conf.url_r
+        self.url_h = conf.url_h
         self.signtype = conf.signtype
 
         with open(conf.rsa_private) as f:
@@ -81,13 +81,21 @@ class IPayApi(PlatFormClient):
         else:
             raise exceptions.VerifyOrderError('sign type error on verify')
 
-    def ipay_url(self, transid):
+    def ipay_url(self, transid, h5=False):
+
+        if not h5:
+            return None
+
+        if not self.url_h or not self.url_r:
+            raise ValueError('Ipay with h5 need success url and fail url')
+
         data = OrderedDict()
         data['tid'] = transid
         data['app'] = self.appid
-        data['url_r'] = self.url_sucess
-        data['url_h'] = self.url_fail
+        data['url_r'] = self.url_r
+        data['url_h'] = self.url_h
         data = jsonutils.dumps_as_bytes(data)
+
         return IPayApi.GWURL + '?' + urlencode(
             dict(
                 data=data,
@@ -116,7 +124,7 @@ class IPayApi(PlatFormClient):
             exceptions.OrderError('url decode key not found')
         return results
 
-    def payment(self, money, oid, req):
+    def payment(self, money, oid, req, h5=False):
         money = round(money*self.roe, 2)
 
         data = OrderedDict()
@@ -152,4 +160,4 @@ class IPayApi(PlatFormClient):
         if not self.verify(results.get(self.TRANSDATA), sign, signtype):
             raise exceptions.VerifyOrderError('RSA verify payment result sign error')
 
-        return transid, self.ipay_url(transid)
+        return transid, self.ipay_url(transid, h5), self.url_r, self.url_h
