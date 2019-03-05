@@ -89,7 +89,7 @@ class WeiXinApi(PlatFormClient):
         rdata = WeiXinApi.decrypt_xml_to_dict(resp.text)
         if rdata.get('return_code') != 'SUCCESS':
             # 微信sandbox接口 msg字段retmsg  不统一
-            LOG.error('Get WeiXin sandbox sign request fail: %s' % data.get('retmsg'))
+            LOG.error('Get WeiXin sandbox sign request fail: %s' % rdata.get('retmsg'))
             LOG.debug('mch_id %s, nonce %s sign %s' % (data['mch_id'], data['nonce_str'], data['sign']))
             raise exceptions.CreateOrderError('Get WeiXin sandbox sign fail')
         if rdata.get('mch_id') != self.mchid:

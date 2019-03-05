@@ -28,11 +28,11 @@ ipay_opts = [
     cfg.StrOpt('rsa_public',
                default='/etc/goperation/endpoints/platforms/ipay_public.key',
                help='ipay signtype rsa public key file'),
-    cfg.UrlOpt('url_sucess',
-               help='ipay pay success request url'
+    cfg.UrlOpt('url_r',
+               help='ipay pay with h5 post request url(success)'
                ),
-    cfg.UrlOpt('url_fail',
-               help='ipay pay fail request url'
+    cfg.UrlOpt('url_h',
+               help='ipay pay with h5 post request url(fail)'
                ),
 ]
 
