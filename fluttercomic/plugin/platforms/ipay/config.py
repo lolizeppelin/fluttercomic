@@ -47,5 +47,6 @@ def register_opts(group):
                              scale=CONF[group.name].scale,
                              currency=CONF[group.name].currency,
                              appId=CONF[group.name].appId,
+                             h5=CONF[group.name].h5,
                              )
 
